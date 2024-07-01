@@ -13,13 +13,18 @@ export default class UsersRepository{
             return response.rows, console.log(`Usuario '${username}' creado Correctamente`)
     }
 
-    async iniciarSesion(username, password){
-        const sql = `SELECT *
+    async usuarioExiste(username, password){
+        const sql = `SELECT * 
         FROM Usuario
-        WHERE username = '${username}' AND password = '${password}'`
+        WHERE username = '${username}' and password = '${password}'`
         console.log(sql)
         const pool = await getConnetion();
         const response = await pool.request().query(sql)
-        return response.rows, console.log(`Sesion iniciada`)
+        console.log(response.recordset)
+        if(response.recordset == ""){
+            return false;
+        }else{
+        return response.recordset
+        }
     }
 }
