@@ -3,7 +3,13 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
 
-// Configura el cliente S3
+console.log(process.env.AWS_ACCESS_KEY_ID); 
+console.log(process.env.AWS_SECRET_ACCESS_KEY); 
+
+// Ignorar los certificados autofirmados
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// Configura el cliente S3 con el agente HTTPS
 const s3 = new S3Client({
   region: 'us-east-2',
   credentials: {
@@ -12,14 +18,14 @@ const s3 = new S3Client({
   }
 });
 
-// Ruta al archivo de la imagen (actualiza con la ruta correcta de tu archivo)
+// Ruta al archivo de la imagen
 const filePath = path.join('./src/img/explosive-chick.png');
 const fileContent = fs.readFileSync(filePath);
 
 // Configura los parámetros de carga
 const params = {
   Bucket: 'noah2',
-  Key: 'explosive-chick.png',
+  Key: 'user/explosive-chick.png',
   Body: fileContent,
   ContentType: 'image/png'
 };
