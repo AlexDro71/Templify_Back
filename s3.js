@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
 
@@ -13,7 +13,6 @@ class S3 {
       }
     });
     
-    // Ignorar los certificados autofirmados
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   }
 
@@ -39,12 +38,24 @@ class S3 {
     }
   }
 
-  async  eliminarArchivo(eliminado) {
-  s3.send(eliminado).then(response =>{
-  console.log(response);
-  return res.status(200).json({mensaje: "archivo borrado correctamente"});
-  })
-}
+  async eliminarArchivo(bucketName, key) {
+    try {
+      const parametros = {
+        Bucket: bucketName,
+        Key: key
+      };
+    
+      const eliminado = new DeleteObjectCommand(parametros);
+      const response = await this.s3.send(eliminado);
+      console.log('Archivo eliminado correctamente:', response);
+      return response;
+    } catch (err) {
+      console.error('Error al eliminar el archivo:', err);
+      throw err;
+    }
+  }
 }
 
-export default S3;
+// Exporta una instancia de S3
+const s3Instance = new S3();
+export default s3Instance;
