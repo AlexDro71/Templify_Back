@@ -38,4 +38,30 @@ router.post("/register", async (request, response) => {
         }
       });
 
+/*Hacer*/      router.patch("/seleccionarPdP", async (request, response) => {
+        try {
+
+        }catch (error) {
+          console.error("Error al seleccionar el plan de pago", error);
+          return response.status(500).json({ message: "Error interno del servidor" });
+        }
+      })
+
+/*Hacer*/      router.post("/crearPlantilla", async (request, response) => {
+  try {
+
+  }catch (error) {
+    console.error("Error al crear plantilla", error);
+    return response.status(500).json({ message: "Error interno del servidor" });
+  }
+})
+
+/*Hacer*/      router.post("/cargarArchivos", async (request, response) => {
+  try {
+
+  }catch (error) {
+    console.error("Error al cargar archivo", error);
+    return response.status(500).json({ message: "Error interno del servidor" });
+  }
+})
 export default router;
