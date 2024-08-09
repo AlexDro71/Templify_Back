@@ -1,5 +1,7 @@
 import express from 'express';
-import  UsersService  from '../services/user-services.js';
+import  usersService  from '../services/user-services.js';
+import S3 from '../../s3.js'
+
 const usersService = new UsersService();
 const router = express.Router();
 
@@ -56,12 +58,37 @@ router.post("/register", async (request, response) => {
   }
 })
 
-/*Hacer*/      router.post("/cargarArchivos", async (request, response) => {
+/*Probar*/      router.post("/cargarArchivos", async (request, response) => {
+  const bucketName = request.body.bucketName
+  const key = request.body.key
+  const filePath = request.body.filePath
+  const contentType = request.body.contentType
   try {
-
+    s3.uploadFile(bucketName, key, filePath, contentType)
+    .then(data => {
+      console.log('Upload successful:', data);
+    })
+    .catch(err => {
+      console.error('Upload failed:', err);
+    });
   }catch (error) {
     console.error("Error al cargar archivo", error);
     return response.status(500).json({ message: "Error interno del servidor" });
   }
 })
+
+/*Probar*/      router.post("/eliminarArchivos", async (request, response) => {
+    const bucket = request.body.bucket; //El bucket se saca del propio codigo, arreglar despues :V
+    const carpetaInternaBucket = request.body.carpetaInterna //Esto es la carpeta del usuario, se saca de la informacion de archivos del usuario
+    
+    
+    const parametros = {
+    Bucket: bucket,
+    Key: carpetaInternaBucket
+    }
+    
+    const eliminado = new DeleteObjectCommand(parametros);
+    return S3.eliminarArchivo(eliminado);
+    
+    });
 export default router;
