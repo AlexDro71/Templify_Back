@@ -31,7 +31,7 @@ class S3 {
       const data = await this.s3.send(command);
       
       console.log('Archivo subido exitosamente:', data);
-      return data;
+      return data.location;
     } catch (err) {
       console.error('Error al subir el archivo:', err);
       throw err;

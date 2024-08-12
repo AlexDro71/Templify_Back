@@ -1,30 +1,39 @@
-import msSQL from "mssql";
-import  {dbConfig}  from "./../../db.js";
-import { getConnetion } from "../../connection.js";
+import pg from "pg";
+import { dbConfig } from "../../db.js";
 
 
-export default class UsersRepository{
-    async crearUsuario(nombre, apellido, username, password, mail, empresa){
-        const sql = `INSERT INTO Usuario (empresa, nombre, mail, password, apellido, username)
-        VALUES ('${empresa}', '${nombre}', '${mail}', '${password}', '${apellido}', '${username}')`;
-            console.log(sql)
-            const pool = await getConnetion();
-            const response = await pool.request().query(sql)
-            return response.rows, console.log(`Usuario '${username}' creado Correctamente`)
+export default class UsersRepository {
+    constructor () {
+        const {Client} = pg;
+        this.DBClient = new Client(dbConfig);
+
+        this.DBClient.connect();
+        
     }
 
-    async usuarioExiste(username, password){
-        const sql = `SELECT * 
-        FROM Usuario
-        WHERE username = '${username}' and password = '${password}'`
-        console.log(sql)
-        const pool = await getConnetion();
-        const response = await pool.request().query(sql)
-        console.log(response.recordset)
-        if(response.recordset == ""){
+    async crearUsuario(nombre, apellido, username, password, mail, empresa) {
+        const sql = `
+            INSERT INTO usuario (empresa, nombre, mail, password, apellido, username)
+            VALUES ('${empresa}', '${nombre}', '${mail}', '${password}', '${apellido}', '${username}')
+            RETURNING *;
+        `;
+        const response = await this.DBClient.query(sql);
+        return response.rows[0];
+    }
+    
+
+    async usuarioExiste(username, password) {
+        const sql = `
+            SELECT * 
+            FROM usuario
+            WHERE username = '${username}' AND password = '${password}';
+        `;
+
+        const response = await this.DBClient.query(sql);
+        if(response.rows[0] == null){
             return false;
         }else{
-        return response.recordset
+            return true;
         }
     }
 }

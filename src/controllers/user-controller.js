@@ -38,9 +38,18 @@ router.post("/login", async (request, response) => {
     }
 });
 
+/*Hacer*/ router.put("/editarUsuario", async (request, response =>{
+  try {
+
+  } catch (error) {
+    console.error("Error al crear algo", error);
+    response.status(500).json({ message: "Error interno del servidor" });
+  }
+}))
+
 /*Hacer*/ router.patch("/seleccionarPdP", async (request, response) => {
     try {
-        // Lógica para seleccionar plan de pago
+
     } catch (error) {
       console.error("Error al seleccionar el plan de pago", error);
       return response.status(500).json({ message: "Error interno del servidor" });
@@ -49,7 +58,7 @@ router.post("/login", async (request, response) => {
 
 /*Hacer*/ router.post("/crearPlantilla", async (request, response) => {
   try {
-      // Lógica para crear plantilla
+
   } catch (error) {
     console.error("Error al crear plantilla", error);
     return response.status(500).json({ message: "Error interno del servidor" });
@@ -77,5 +86,3 @@ router.post("/login", async (request, response) => {
     response.status(500).json({ message: "Error interno del servidor" });
   }
 });
-
-export default router;
