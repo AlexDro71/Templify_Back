@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/register", async (request, response) => {
     try {
-      const {nombre, apellido, username, password, mail, empresa} = request.body;
+      const { nombre, apellido, username, password, mail, empresa } = request.body;
       const nuevoUser = await usersService.crearUsuario(nombre, apellido, username, password, mail, empresa);
       response.status(201).json({ message: "Usuario creado correctamente" });
     } catch (error) {
