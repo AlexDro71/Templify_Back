@@ -17,6 +17,7 @@ client.connect()
     console.error('Error al conectar a la base de datos', err);
   });
 
+  
 dotenv.config();
 const PORT = process.env.PORT || 3033;
 const app = express();
@@ -30,7 +31,8 @@ app.use('/api/user', userController);
 app.get('/api/data', (req, res) => {
     res.json({ message: 'Hello from the backend!' });
 });
-
+console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID);
+console.log('AWS_SECRET_ACCESS_KEY:', process.env.AWS_SECRET_ACCESS_KEY);
 app.listen(PORT, () => {
     console.log(`Servidor escuchando en el puerto ${PORT}`);
 });

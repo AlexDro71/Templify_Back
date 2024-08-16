@@ -1,35 +1,40 @@
 import 'dotenv/config';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import fs from 'fs';
-import path from 'path';
+import { NodeHttpHandler } from '@aws-sdk/node-http-handler';
+import { Agent } from 'https';
 
 class S3 {
   constructor() {
+    // Inicializa el cliente de S3 con credenciales y región
     this.s3 = new S3Client({
       region: 'us-east-2',
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      }
+      },
+      requestHandler: new NodeHttpHandler({
+        connectionTimeout: 3000,
+        socketTimeout: 3000,
+        httpAgent: new Agent({ rejectUnauthorized: false }), // Acepta certificados auto-firmados
+        httpsAgent: new Agent({ rejectUnauthorized: false }), // Acepta certificados auto-firmados
+      }),
     });
-    
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   }
 
-  async uploadFile(key, filePath, contentType) {
+  async uploadFile(key, fileBuffer, contentType) {
     try {
-      const fileContent = fs.readFileSync(path.resolve(filePath));
-      
+      // Configura los parámetros de subida
       const params = {
-        Bucket: noah2,
+        Bucket: process.env.S3_BUCKET_NAME, // Usa la variable de entorno para el nombre del bucket
         Key: key,
-        Body: fileContent,
-        ContentType: "image/" + contentType,
+        Body: fileBuffer,
+        ContentType: contentType,
       };
 
+      // Crea y envía el comando para subir el archivo
       const command = new PutObjectCommand(params);
       const data = await this.s3.send(command);
-      
+
       console.log('Archivo subido exitosamente:', data);
       return data;
     } catch (err) {
@@ -38,15 +43,22 @@ class S3 {
     }
   }
 
-  async eliminarArchivo(bucketName, key) {
+  async eliminarArchivo(key) {
     try {
-      const parametros = {
-        Bucket: bucketName,
-        Key: key
+      // Asegúrate de que el key no esté vacío
+      if (!key) {
+        throw new Error('No se proporcionó un key válido para eliminar el archivo.');
+      }
+
+      // Configura los parámetros para eliminar el archivo
+      const params = {
+        Bucket: process.env.S3_BUCKET_NAME, // Usa la variable de entorno para el nombre del bucket
+        Key: key,
       };
-    
-      const eliminado = new DeleteObjectCommand(parametros);
-      const response = await this.s3.send(eliminado);
+
+      // Crea y envía el comando para eliminar el archivo
+      const command = new DeleteObjectCommand(params);
+      const response = await this.s3.send(command);
       console.log('Archivo eliminado correctamente:', response);
       return response;
     } catch (err) {
