@@ -7,6 +7,13 @@ export default class UsersService {
         const returnArray = await repo.crearUsuario(nombre, apellido, username, password, mail, empresa);
         return returnArray;
     }
+
+    autenticarUsuario = async (username, password) => {
+        const repo = new UsersRepository();
+        const user = await repo.autenticarUsuario(username, password);
+        return user;
+    }
+    
     recibirToken = async (username, password) => {
         console.log("pasa")
         const repo = new UsersRepository();

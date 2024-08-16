@@ -1,44 +1,44 @@
-import express from 'express';
-import usersService from '../services/user-services.js';
 import s3 from '../../s3.js';
+import express from 'express';
+import UsersService from '../services/user-services.js';
 
 const router = express.Router();
+const usersService = new UsersService();
 
 router.post("/register", async (request, response) => {
-  try {
-      console.log("Datos recibidos:", request.body);
-      const { nombre, apellido, username, password, mail, empresa } = request.body;
-      const nuevoUser = await usersService.crearUsuario(nombre, apellido, username, password, mail, empresa);
-      console.log("Usuario creado:", nuevoUser);
-      response.status(201).json({ message: "Usuario creado correctamente" });
-  } catch (error) {
-      console.error("Error al crear usuario:", error.message);  // Solo el mensaje de error
-      response.status(500).json({ message: "Error interno del servidor" });
-  }
+    try {
+        console.log("Datos recibidos:", request.body);
+        const { nombre, apellido, username, password, mail, empresa } = request.body;
+        const nuevoUser = await usersService.crearUsuario(nombre, apellido, username, password, mail, empresa);
+        console.log("Usuario creado:", nuevoUser);
+        response.status(201).json({ message: "Usuario creado correctamente" });
+    } catch (error) {
+        console.error("Error al crear usuario:", error.message);  // Solo el mensaje de error
+        response.status(500).json({ message: "Error interno del servidor" });
+    }
 });
 
 
 router.post("/login", async (request, response) => {
-    try {
-        const { username, password } = request.body;
-        const login = await usersService.recibirToken(username, password);
-        if (login) {
-            return response.status(200).json({
-                success: true,
-                message: "Inicio correcto",
-                token: login,
-            });
+  try {
+      const { username, password } = request.body;
+      console.log("Datos recibidos para login:", request.body);
+
+      // Reemplazar esta línea con la lógica adecuada de autenticación
+      const user = await usersService.autenticarUsuario(username, password);
+
+      if (user) {
+          // Lógica de token comentada por ahora
+          // const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+          response.status(200).json({ success: true, message: 'Inicio de sesión exitoso' /*, token */ });
+      console.log("Sesion iniciada correctamente")
         } else {
-            response.status(401).json({
-                success: false,
-                message: "Usuario o clave inválida",
-                token: "",
-            });
-        }
-    } catch (error) {
-        console.error("Error al iniciar sesión", error);
-        return response.status(500).json({ message: "Error interno del servidor" });
-    }
+          response.status(401).json({ success: false, message: 'Credenciales inválidas' });
+      }
+  } catch (error) {
+      console.error('Error durante el login', error);
+      response.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
 });
 
 /*Hacer*/ 

@@ -22,7 +22,7 @@ export default class UsersRepository {
     }
     
 
-    async usuarioExiste(username, password) {
+    async autenticarUsuario(username, password) {
         const sql = `
             SELECT * 
             FROM usuario
