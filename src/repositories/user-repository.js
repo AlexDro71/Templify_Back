@@ -30,10 +30,6 @@ export default class UsersRepository {
         `;
 
         const response = await this.DBClient.query(sql);
-        if(response.rows[0] == null){
-            return false;
-        }else{
-            return true;
-        }
+        return response.rows[0];
     }
 }

@@ -16,15 +16,15 @@ class S3 {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   }
 
-  async uploadFile(bucketName, key, filePath, contentType) {
+  async uploadFile(key, filePath, contentType) {
     try {
       const fileContent = fs.readFileSync(path.resolve(filePath));
       
       const params = {
-        Bucket: bucketName,
+        Bucket: noah2,
         Key: key,
         Body: fileContent,
-        ContentType: contentType,
+        ContentType: "image/" + contentType,
       };
 
       const command = new PutObjectCommand(params);

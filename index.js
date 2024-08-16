@@ -2,6 +2,20 @@ import express from 'express';
 import dotenv from 'dotenv';
 import userController from './src/controllers/user-controller.js'; 
 import cors from 'cors';
+import pg from 'pg';
+import { dbConfig } from './db.js';
+
+const { Client } = pg;
+const client = new Client(dbConfig);
+
+client.connect()
+  .then(() => {
+    console.log('Conexión exitosa a la base de datos');
+    client.end();
+  })
+  .catch(err => {
+    console.error('Error al conectar a la base de datos', err);
+  });
 
 dotenv.config();
 const PORT = process.env.PORT || 3033;
