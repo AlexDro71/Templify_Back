@@ -46,6 +46,7 @@ router.post("/login", async (request, response) => {
 /*Hacer*/ 
 router.put("/editarUsuario", async (request, response) => {
     try {
+
         
     } catch (error) {
         console.error("Error al editar usuario", error);
@@ -56,7 +57,11 @@ router.put("/editarUsuario", async (request, response) => {
 /*Hacer*/ 
 router.patch("/seleccionarPdP", async (request, response) => {
     try {
-        
+        const user = request.user.id
+        const PdP = request.body.PdP
+        const func = await usersService.seleccionarPdP(user, PdP);
+        response.status(200).json({message: "Plan de Pago aplicado al usuario"})
+
     } catch (error) {
         console.error("Error al seleccionar el plan de pago", error);
         return response.status(500).json({ message: "Error interno del servidor" });

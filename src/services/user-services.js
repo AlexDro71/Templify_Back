@@ -13,6 +13,11 @@ export default class UsersService {
         const user = await repo.autenticarUsuario(username, password);
         return user;
     }
+    seleccionarPdP = async (user, PdP) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.seleccionarPdP(user, PdP);
+        return returnArray;
+    }
     
     recibirToken = async (username, password) => {
         console.log("pasa")

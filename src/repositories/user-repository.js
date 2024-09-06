@@ -32,4 +32,10 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
+    async seleccionarPdP(user, PdP) {
+        const sql = `UPDATE usuario SET plandepago = '${user}' WHERE id = '${PdP}' RETURNING *`;
+        const response = await this.DBClient.query(sql);
+        return response.rows[0];
+      
+    }
 }
