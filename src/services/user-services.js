@@ -13,46 +13,48 @@ export default class UsersService {
         const user = await repo.autenticarUsuario(username, password);
         return user;
     }
-    seleccionarPdP = async (user, PdP) => {
+
+    seleccionarPdP = async (user, PdP, nombrePdP, precio, plazoP) => {
         const repo = new UsersRepository();
-        const returnArray = await repo.seleccionarPdP(user, PdP);
+        const returnArray = await repo.seleccionarPdP(user, PdP, nombrePdP, precio, plazoP);
         return returnArray;
     }
+
     editarUsuario = async (tabla, user, password, cambio, username) => {
         const repo = new UsersRepository();
         const returnArray = await repo.editarUsuario(tabla, user, password, cambio, username);
         return returnArray;
     }
-    
+
     recibirToken = async (username, password) => {
-        console.log("pasa")
+        console.log("Datos recibidos para login:", { username, password });
         const repo = new UsersRepository();
-        const validarUsuario = await repo.usuarioExiste(username, password); 
-        console.log(validarUsuario)
-        if(validarUsuario){
-           const token = this.generarToken(validarUsuario[0].id, validarUsuario[0].username); 
-           
-            return token; 
+        const validarUsuario = await repo.autenticarUsuario(username, password);
+        console.log("Resultado de la autenticación:", validarUsuario);
+
+        if (validarUsuario && validarUsuario.length > 0 && validarUsuario[0].id) {
+            const token = this.generarToken(validarUsuario[0].id, validarUsuario[0].username);
+            return { success: true, token }; // Asegúrate de devolver el token como una cadena
         } else {
-            return false;
+            console.error("Usuario no encontrado o inválido");
+            return { success: false, message: "Usuario no encontrado o inválido" };
         }
     }
-    generarToken = async (id, username) =>{
-        console.log("id:", id)
+
+    generarToken = (id, username) => {
+        console.log("id:", id);
         const payload = {
             id: id,
             username: username
-        }
-        
-        const secretKey = 'Mediafire>>>MEGA'
-        
+        };
+
+        const secretKey = 'Mediafire>>>MEGA';
         const options = {
-            expiresIn : "4 Hours",
-            issuer : 'NoahDK06'
-        }
-        
-        const token = jwt.sign(payload, secretKey, options)
-    
-        return token;
-        }
+            expiresIn: "4 Hours",
+            issuer: 'NoahDK06'
+        };
+
+        const token = jwt.sign(payload, secretKey, options);
+        return token; // El token debería ser una cadena
+    }
 }

@@ -24,24 +24,32 @@ router.post("/register", async (request, response) => {
 });
 
 router.post("/login", async (request, response) => {
-  try {
+    try {
       const { username, password } = request.body;
       console.log("Datos recibidos para login:", request.body);
-
-
+  
       const user = await usersService.autenticarUsuario(username, password);
-
+  
       if (user) {
-          response.status(200).json({ success: true, message: 'Inicio de sesión exitoso' });
-          console.log("Sesion iniciada correctamente");
+        const token = await usersService.recibirToken(username, password);
+        response.status(200).json({
+          success: true,
+          message: 'Inicio de sesión exitoso',
+          token: token, // Enviar el token
+          user: {
+            id: user.id,
+            username: user.username
+          } // Enviar información del usuario
+        });
+        console.log("Sesión iniciada correctamente");
       } else {
-          response.status(401).json({ success: false, message: 'Credenciales inválidas' });
+        response.status(401).json({ success: false, message: 'Credenciales inválidas' });
       }
-  } catch (error) {
+    } catch (error) {
       console.error('Error durante el login', error);
       response.status(500).json({ success: false, message: 'Error interno del servidor' });
-  }
-});
+    }
+  });
 
 /*Hacer*/ 
 router.patch("/editarUsuario", async (request, response) => {
@@ -64,8 +72,8 @@ router.patch("/editarUsuario", async (request, response) => {
 router.patch("/seleccionarPdP", async (request, response) => {
     try {
         const user = request.user.id
-        const PdP = request.body.PdP
-        const func = await usersService.seleccionarPdP(user, PdP);
+        const {PdP, nombrePdP, precio, plazo} = request.body
+        const func = await usersService.seleccionarPdP(uuser, PdP, nombrePdP, precio, plazo);
         response.status(200).json({message: "Plan de Pago aplicado al usuario"})
 
     } catch (error) {
