@@ -18,6 +18,11 @@ export default class UsersService {
         const returnArray = await repo.seleccionarPdP(user, PdP);
         return returnArray;
     }
+    editarUsuario = async (tabla, user, password, cambio, username) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.editarUsuario(tabla, user, password, cambio, username);
+        return returnArray;
+    }
     
     recibirToken = async (username, password) => {
         console.log("pasa")

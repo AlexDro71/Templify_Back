@@ -28,7 +28,7 @@ router.post("/login", async (request, response) => {
       const { username, password } = request.body;
       console.log("Datos recibidos para login:", request.body);
 
-      // Reemplazar esta línea con la lógica adecuada de autenticación
+
       const user = await usersService.autenticarUsuario(username, password);
 
       if (user) {
@@ -44,14 +44,20 @@ router.post("/login", async (request, response) => {
 });
 
 /*Hacer*/ 
-router.put("/editarUsuario", async (request, response) => {
+router.patch("/editarUsuario", async (request, response) => {
     try {
-
-        
+        const {tabla, password, cambio} = request.body
+        const user = request.user.id
+        const nombre = request.user.username
+        const cambiar = await usersService.editarUsuario(tabla, user, password, cambio, username)
+        if(cambiar != null){
+        response.status(200).json({ message: tabla + " ha sido actualizado correctamente" });
+        }   
     } catch (error) {
         console.error("Error al editar usuario", error);
         response.status(500).json({ message: "Error interno del servidor" });
     }
+
 });
 
 /*Hacer*/ 
