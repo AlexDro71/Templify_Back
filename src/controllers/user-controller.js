@@ -6,7 +6,7 @@ import multer from 'multer';
 const router = express.Router();
 const usersService = new UsersService();
 
-// Define el almacenamiento en memoria para los archivos
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -26,20 +26,18 @@ router.post("/register", async (request, response) => {
 router.post("/login", async (request, response) => {
     try {
       const { username, password } = request.body;
-      console.log("Datos recibidos para login:", request.body);
-  
       const user = await usersService.autenticarUsuario(username, password);
-  
       if (user) {
         const token = await usersService.recibirToken(username, password);
+        console.log("token in controller: " + token.token)
         response.status(200).json({
           success: true,
           message: 'Inicio de sesión exitoso',
-          token: token, // Enviar el token
+          token: token.token, 
           user: {
             id: user.id,
             username: user.username
-          } // Enviar información del usuario
+          } 
         });
         console.log("Sesión iniciada correctamente");
       } else {
@@ -68,19 +66,20 @@ router.patch("/editarUsuario", async (request, response) => {
 
 });
 
-/*Hacer*/ 
 router.patch("/seleccionarPdP", async (request, response) => {
-    try {
-        const user = request.user.id
-        const {PdP, nombrePdP, precio, plazo} = request.body
-        const func = await usersService.seleccionarPdP(uuser, PdP, nombrePdP, precio, plazo);
-        response.status(200).json({message: "Plan de Pago aplicado al usuario"})
-
-    } catch (error) {
-        console.error("Error al seleccionar el plan de pago", error);
-        return response.status(500).json({ message: "Error interno del servidor" });
-    }
+  try {
+      const { nombrePdP, precio, plazo, userId } = request.body;
+      await usersService.seleccionarPdP(userId, nombrePdP, precio, plazo);
+      response.status(200).json({ message: "Plan de Pago aplicado al usuario" });
+  } catch (error) {
+      console.error("Error al seleccionar el plan de pago", error);
+      if (error.message === "El usuario ya tiene un plan de pago activo.") {
+          return response.status(400).json({ message: error.message });
+      }
+      return response.status(500).json({ message: "Error interno del servidor" });
+  }
 });
+
 
 /*Hacer*/ 
 router.post("/crearPlantilla", async (request, response) => {
@@ -112,7 +111,7 @@ router.post("/cargarArchivos", upload.single('file'), async (request, response) 
 
 /*Probar*/ 
 router.post("/eliminarArchivos", async (request, response) => {
-  const { key } = request.body; // Solo necesitas el key para eliminar el archivo
+  const { key } = request.body; 
   console.log("Datos recibidos:", request.body);
 
   try {

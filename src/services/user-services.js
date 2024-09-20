@@ -14,9 +14,9 @@ export default class UsersService {
         return user;
     }
 
-    seleccionarPdP = async (user, PdP, nombrePdP, precio, plazoP) => {
+    seleccionarPdP = async (user, nombrePdP, precio, plazo) => {
         const repo = new UsersRepository();
-        const returnArray = await repo.seleccionarPdP(user, PdP, nombrePdP, precio, plazoP);
+        const returnArray = await repo.seleccionarPdP(user, nombrePdP, precio, plazo);
         return returnArray;
     }
 
@@ -26,20 +26,12 @@ export default class UsersService {
         return returnArray;
     }
 
-    recibirToken = async (username, password) => {
-        console.log("Datos recibidos para login:", { username, password });
-        const repo = new UsersRepository();
-        const validarUsuario = await repo.autenticarUsuario(username, password);
-        console.log("Resultado de la autenticación:", validarUsuario);
-
-        if (validarUsuario && validarUsuario.length > 0 && validarUsuario[0].id) {
-            const token = this.generarToken(validarUsuario[0].id, validarUsuario[0].username);
-            return { success: true, token }; // Asegúrate de devolver el token como una cadena
-        } else {
-            console.error("Usuario no encontrado o inválido");
-            return { success: false, message: "Usuario no encontrado o inválido" };
-        }
-    }
+    recibirToken = async (id, username) => {
+        console.log("Datos recibidos para generar token:", { id, username });
+        const token = this.generarToken(id, username);   
+        console.log("Token in service: " + token)
+        return { success: true, token };
+    };
 
     generarToken = (id, username) => {
         console.log("id:", id);
@@ -55,6 +47,6 @@ export default class UsersService {
         };
 
         const token = jwt.sign(payload, secretKey, options);
-        return token; // El token debería ser una cadena
+        return token; 
     }
 }

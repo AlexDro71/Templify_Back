@@ -32,18 +32,26 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
-    async seleccionarPdP(user, PdP, nombrePdP, precio, plazo) {
+    async seleccionarPdP(user, nombrePdP, precio, plazo) {
+        console.log("Datos: User: "+ user + " nombrePdp: " + nombrePdP + " precio: " + precio + " plazo: " + plazo);
         const fechaInicio = new Date();
         const fechaFin = new Date(fechaInicio);
         fechaFin.setDate(fechaInicio.getDate() + plazo);
-        const run = `INSERT into plandepago (nombre, fechainicio, fechafin, precio)
-        VALUES ('${nombrePdP}', '${fechaInicio}', '${fechaFin}', '${precio}')`
-        const create = await this.DBClient.query(sql);
-        const sql = `UPDATE usuario SET plandepago = '${PdP}' WHERE id = '${user}' RETURNING *`;
+        
+        const fechaInicioUTC = fechaInicio.toISOString().slice(0, 19).replace('T', ' ');
+        const fechaFinUTC = fechaFin.toISOString().slice(0, 19).replace('T', ' ');
+    
+       
+        const result = await this.DBClient.query(`INSERT into plandepago (nombre, fechainicio, fechafin, precio)
+        VALUES ('${nombrePdP}', '${fechaInicioUTC}', '${fechaFinUTC}', '${precio}') RETURNING id`);
+    
+        const planId = result.rows[0].id
+    
+        const sql = `UPDATE usuario SET plandepago = '${planId}' WHERE id = '${user}' RETURNING *`;
         const response = await this.DBClient.query(sql);
         return response.rows[0];
-      
     }
+    
 
     async editarUsuario(tabla, user, password, cambio, username){
         if(this.autenticarUsuario(username, password)){
