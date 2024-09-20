@@ -26,6 +26,24 @@ export default class UsersService {
         return returnArray;
     }
 
+    getUserProfile = async (userId) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.getUserProfile(userId);
+        return returnArray;
+        
+      };
+      
+      updateUserProfile = async (userId, field, value) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.updateUserProfileUserProfile(useruserId, field, valueId);
+        return returnArray;
+
+      };
+      
+      sendSMSVerification = async (userId, phoneNumber) => {
+        // Implementar lógica de SMS usando un servicio externo
+      };
+
     recibirToken = async (id, username) => {
         console.log("Datos recibidos para generar token:", { id, username });
         const token = this.generarToken(id, username);   

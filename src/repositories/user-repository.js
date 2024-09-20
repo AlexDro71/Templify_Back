@@ -52,14 +52,22 @@ export default class UsersRepository {
         return response.rows[0];
     }
     
-
-    async editarUsuario(tabla, user, password, cambio, username){
-        if(this.autenticarUsuario(username, password)){
-        const sql = `UPDATE usuario SET '${tabla}' = '${cambio}' WHERE id = '${user}' RETURNING *`
-        const response = await this.DBClient.query(sql);
+    getUserProfile = async (userId) => {
+        const sql = `    SELECT u.username, u.nombre, u.mail, u.empresa, 
+        u.phoneNumber, p.nombre as plan_nombre, 
+        p.precio, p.fechainicio, p.fechafin
+ FROM usuario u
+ LEFT JOIN plandepago p ON u.plandepago = p.id
+ WHERE u.id = ${userId}`
+        const response = await this.DBClient.query(sql)
         return response.rows[0];
-        }else{
-            return null;
-        }
-    }
+      };
+      
+    updateUserProfile = async (userId, field, value) => {
+        const sql = `UPDATE usuario SET ${field} = '${value}' WHERE id = ${userId} RETURNING *`
+        const response = await this.DBClient.query(sql)
+        return response.rows[0];
+      };
+
+    
 }

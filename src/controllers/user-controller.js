@@ -49,22 +49,38 @@ router.post("/login", async (request, response) => {
     }
   });
 
-/*Hacer*/ 
-router.patch("/editarUsuario", async (request, response) => {
+  router.get('/profile', async (request, response) => {
     try {
-        const {tabla, password, cambio} = request.body
-        const user = request.user.id
-        const nombre = request.user.username
-        const cambiar = await usersService.editarUsuario(tabla, user, password, cambio, username)
-        if(cambiar != null){
-        response.status(200).json({ message: tabla + " ha sido actualizado correctamente" });
-        }   
+      const {userId} = request.body;  
+      const userProfile = await usersService.getUserProfile(userId);
+      response.status(200).json(userProfile);
     } catch (error) {
-        console.error("Error al editar usuario", error);
-        response.status(500).json({ message: "Error interno del servidor" });
+      console.error("Error al obtener el perfil", error);
+      return response.status(500).json({ message: "Error interno del servidor" });
     }
-
-});
+  });
+  
+  router.patch('/updateProfile', async (request, response) => {
+    try {
+      const { field, value, userId } = request.body;
+      const updatedUser = await usersService.updateUserProfile(userId, field, value);
+      response.status(200).json(updatedUser);
+    } catch (error) {
+      console.error("Error al actualizar el perfil", error);
+      return response.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+  
+  router.post('/sendSMS', async (request, response) => {
+    try {
+      const { phoneNumber, userId } = request.body;
+      await usersService.sendSMSVerification(userId, phoneNumber);
+      response.status(200).json({ message: "SMS enviado para verificación" });
+    } catch (error) {
+      console.error("Error al enviar SMS", error);
+      return response.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
 
 router.patch("/seleccionarPdP", async (request, response) => {
   try {
