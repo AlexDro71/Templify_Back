@@ -11,7 +11,6 @@ const client = new Client(dbConfig);
 client.connect()
   .then(() => {
     console.log('Conexión exitosa a la base de datos');
-    client.end();
   })
   .catch(err => {
     console.error('Error al conectar a la base de datos', err);

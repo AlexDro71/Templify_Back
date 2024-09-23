@@ -10,8 +10,11 @@ export default class UsersService {
 
     autenticarUsuario = async (username, password) => {
         const repo = new UsersRepository();
-        const user = await repo.autenticarUsuario(username, password);
-        return user;
+        const user = await repo.autenticarUsuario(username);
+        if (user && user.password === password) { // Comparar directamente, ya que no se cifran contraseñas
+            return user;
+        }
+        return null;
     }
 
     seleccionarPdP = async (user, nombrePdP, precio, plazo) => {
@@ -20,51 +23,36 @@ export default class UsersService {
         return returnArray;
     }
 
-    editarUsuario = async (tabla, user, password, cambio, username) => {
-        const repo = new UsersRepository();
-        const returnArray = await repo.editarUsuario(tabla, user, password, cambio, username);
-        return returnArray;
-    }
-
     getUserProfile = async (userId) => {
         const repo = new UsersRepository();
         const returnArray = await repo.getUserProfile(userId);
         return returnArray;
-        
-      };
-      
-      updateUserProfile = async (userId, field, value) => {
-        const repo = new UsersRepository();
-        const returnArray = await repo.updateUserProfileUserProfile(useruserId, field, valueId);
-        return returnArray;
+    };
 
-      };
-      
-      sendSMSVerification = async (userId, phoneNumber) => {
-        // Implementar lógica de SMS usando un servicio externo
-      };
+    updateUserProfile = async (userId, field, value) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.updateUserProfile(userId, field, value);
+        return returnArray;
+    };
 
     recibirToken = async (id, username) => {
         console.log("Datos recibidos para generar token:", { id, username });
-        const token = this.generarToken(id, username);   
-        console.log("Token in service: " + token)
+        const token = this.generarToken(id, username);
         return { success: true, token };
     };
 
     generarToken = (id, username) => {
-        console.log("id:", id);
         const payload = {
             id: id,
             username: username
         };
 
-        const secretKey = 'Mediafire>>>MEGA';
+        const secretKey = process.env.JWT_SECRET_KEY || 'Mediafire>>>MEGA'; // Clave secreta desde .env
         const options = {
             expiresIn: "4 Hours",
             issuer: 'NoahDK06'
         };
 
-        const token = jwt.sign(payload, secretKey, options);
-        return token; 
+        return jwt.sign(payload, secretKey, options);
     }
 }

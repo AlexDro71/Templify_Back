@@ -2,13 +2,13 @@ import s3 from '../../s3.js';
 import express from 'express';
 import UsersService from '../services/user-services.js';
 import multer from 'multer';
+import verifyToken from '../middlewares/auth-middleware.js'; // Importamos el middleware
 
 const router = express.Router();
 const usersService = new UsersService();
 
-
 const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const upload = multer({ storage: storage }).array('files', 10); // Soporta múltiples archivos
 
 router.post("/register", async (request, response) => {
     try {
@@ -29,7 +29,6 @@ router.post("/login", async (request, response) => {
       const user = await usersService.autenticarUsuario(username, password);
       if (user) {
         const token = await usersService.recibirToken(username, password);
-        console.log("token in controller: " + token.token)
         response.status(200).json({
           success: true,
           message: 'Inicio de sesión exitoso',
@@ -47,20 +46,21 @@ router.post("/login", async (request, response) => {
       console.error('Error durante el login', error);
       response.status(500).json({ success: false, message: 'Error interno del servidor' });
     }
-  });
+});
 
-  router.get('/profile', async (request, response) => {
+// Ruta protegida
+router.get('/profile', verifyToken, async (request, response) => {
     try {
-      const {userId} = request.body;  
+      const userId = request.user.id; // Extraemos el ID del token verificado
       const userProfile = await usersService.getUserProfile(userId);
       response.status(200).json(userProfile);
     } catch (error) {
       console.error("Error al obtener el perfil", error);
       return response.status(500).json({ message: "Error interno del servidor" });
     }
-  });
-  
-  router.patch('/updateProfile', async (request, response) => {
+});
+
+router.patch('/updateProfile', async (request, response) => {
     try {
       const { field, value, userId } = request.body;
       const updatedUser = await usersService.updateUserProfile(userId, field, value);
@@ -69,9 +69,9 @@ router.post("/login", async (request, response) => {
       console.error("Error al actualizar el perfil", error);
       return response.status(500).json({ message: "Error interno del servidor" });
     }
-  });
-  
-  router.post('/sendSMS', async (request, response) => {
+});
+
+router.post('/sendSMS', async (request, response) => {
     try {
       const { phoneNumber, userId } = request.body;
       await usersService.sendSMSVerification(userId, phoneNumber);
@@ -80,61 +80,55 @@ router.post("/login", async (request, response) => {
       console.error("Error al enviar SMS", error);
       return response.status(500).json({ message: "Error interno del servidor" });
     }
-  });
+});
 
 router.patch("/seleccionarPdP", async (request, response) => {
-  try {
+    try {
       const { nombrePdP, precio, plazo, userId } = request.body;
       await usersService.seleccionarPdP(userId, nombrePdP, precio, plazo);
       response.status(200).json({ message: "Plan de Pago aplicado al usuario" });
-  } catch (error) {
+    } catch (error) {
       console.error("Error al seleccionar el plan de pago", error);
       if (error.message === "El usuario ya tiene un plan de pago activo.") {
           return response.status(400).json({ message: error.message });
       }
       return response.status(500).json({ message: "Error interno del servidor" });
-  }
+    }
 });
 
-
-/*Hacer*/ 
 router.post("/crearPlantilla", async (request, response) => {
     try {
-        
+        // Lógica para crear plantilla
     } catch (error) {
         console.error("Error al crear plantilla", error);
         return response.status(500).json({ message: "Error interno del servidor" });
     }
 });
 
-/*Probar*/ 
-router.post("/cargarArchivos", upload.single('file'), async (request, response) => {
-  const { key, contentType } = request.body;
-  const file = request.file;
-
-  if (!file) {
-      return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
+// Subida de múltiples archivos
+router.post("/cargarArchivos", upload, async (request, response) => {
+  const files = request.files;
+  if (!files || files.length === 0) {
+    return response.status(400).json({ message: 'No se han enviado archivos' });
   }
 
   try {
-      const data = await s3.uploadFile(key, file.buffer, contentType);
-      response.status(200).json({ message: 'Archivo subido exitosamente', data });
+    const data = await Promise.all(files.map(file => 
+      s3.uploadFile(file.originalname, file.buffer, file.mimetype)
+    ));
+    response.status(200).json({ message: 'Archivos subidos exitosamente', data });
   } catch (error) {
-      console.error("Error al cargar archivo", error);
-      response.status(500).json({ message: "Error interno del servidor" });
+    console.error("Error al cargar archivo", error);
+    response.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
-/*Probar*/ 
 router.post("/eliminarArchivos", async (request, response) => {
-  const { key } = request.body; 
-  console.log("Datos recibidos:", request.body);
-
+  const { key } = request.body;
   try {
       if (!key) {
         return response.status(400).json({ message: 'No se proporcionó un key válido para eliminar el archivo.' });
       }
-
       const data = await s3.eliminarArchivo(key);
       response.status(200).json({ message: 'Archivo eliminado correctamente', data });
   } catch (error) {
