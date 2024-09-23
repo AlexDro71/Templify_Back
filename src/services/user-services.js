@@ -10,7 +10,7 @@ export default class UsersService {
 
     autenticarUsuario = async (username, password) => {
         const repo = new UsersRepository();
-        const returnArray = await repo.autenticarUsuario(username);
+        const returnArray = await repo.autenticarUsuario(username, password);
         return returnArray;
     }
 
