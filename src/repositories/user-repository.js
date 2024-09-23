@@ -11,22 +11,21 @@ export default class UsersRepository {
     async crearUsuario(nombre, apellido, username, password, mail, empresa) {
         const sql = `
             INSERT INTO usuario (empresa, nombre, mail, password, apellido, username)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ('${empresa}', '${nombre}', '${mail}', '${password}', '${apellido}', '${username}')
             RETURNING *;
         `;
-        const values = [empresa, nombre, mail, password, apellido, username];
-        const response = await this.DBClient.query(sql, values);
+        const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
 
-    async autenticarUsuario(username) {
+    async autenticarUsuario(username, password) {
         const sql = `
             SELECT * 
             FROM usuario
-            WHERE username = $1;
-        `;
-        const values = [username];
-        const response = await this.DBClient.query(sql, values);
+            WHERE username = '${username}' AND password = '${password}'`;
+        ;
+
+        const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
 
@@ -39,12 +38,12 @@ export default class UsersRepository {
         
         const planResult = await this.DBClient.query(
             `INSERT into plandepago (nombre, fechainicio, fechafin, precio) 
-             VALUES ($1, $2, $3, $4) RETURNING id`, 
-            [nombrePdP, fechaInicioUTC, fechaFinUTC, precio]
+             VALUES ('${nombrePdP}', '${fechaInicioUTC}', '${fechaFinUTC}', '${precio}') RETURNING *`, 
+            
         );
         const planId = planResult.rows[0].id;
 
-        const sql = `UPDATE usuario SET plandepago = $1 WHERE id = $2 RETURNING *`;
+        const sql = `UPDATE usuario SET plandepago = '${planId}' WHERE id = '${user}' RETURNING *`;
         const response = await this.DBClient.query(sql, [planId, user]);
         return response.rows[0];
     }
@@ -52,14 +51,13 @@ export default class UsersRepository {
     getUserProfile = async (userId) => {
         const sql = `
             SELECT u.username, u.nombre, u.mail, u.empresa, 
-            u.telefono, p.nombre as plan_nombre, 
+            u.telefono, u.plandepago, p.nombre as plan_nombre, 
             p.precio, p.fechainicio, p.fechafin
             FROM usuario u
             LEFT JOIN plandepago p ON u.plandepago = p.id
-            WHERE u.id = $1
+            WHERE u.id = '${userId}'
         `;
-        const values = [userId];
-        const response = await this.DBClient.query(sql, values);
+        const response = await this.DBClient.query(sql);
         return response.rows[0];
     };
 

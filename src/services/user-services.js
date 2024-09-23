@@ -10,11 +10,8 @@ export default class UsersService {
 
     autenticarUsuario = async (username, password) => {
         const repo = new UsersRepository();
-        const user = await repo.autenticarUsuario(username);
-        if (user && user.password === password) { // Comparar directamente, ya que no se cifran contraseñas
-            return user;
-        }
-        return null;
+        const returnArray = await repo.autenticarUsuario(username);
+        return returnArray;
     }
 
     seleccionarPdP = async (user, nombrePdP, precio, plazo) => {
@@ -37,22 +34,25 @@ export default class UsersService {
 
     recibirToken = async (id, username) => {
         console.log("Datos recibidos para generar token:", { id, username });
-        const token = this.generarToken(id, username);
+        const token = this.generarToken(id, username);   
+        console.log("Token in service: " + token)
         return { success: true, token };
     };
 
     generarToken = (id, username) => {
+        console.log("id:", id);
         const payload = {
             id: id,
             username: username
         };
 
-        const secretKey = process.env.JWT_SECRET_KEY || 'Mediafire>>>MEGA'; // Clave secreta desde .env
+        const secretKey = 'Mediafire>>>MEGA';
         const options = {
             expiresIn: "4 Hours",
             issuer: 'NoahDK06'
         };
 
-        return jwt.sign(payload, secretKey, options);
+        const token = jwt.sign(payload, secretKey, options);
+        return token; 
     }
 }
