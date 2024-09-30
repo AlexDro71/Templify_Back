@@ -5,7 +5,14 @@ import { Agent } from 'https';
 
 class S3 {
   constructor() {
-    
+    const bucketName = process.env.S3_BUCKET_NAME;
+
+    if (!bucketName) {
+      throw new Error('No se proporcionó un nombre de bucket válido. Asegúrate de definir la variable S3_BUCKET_NAME en el archivo .env.');
+    }
+
+    this.bucketName = bucketName;
+
     this.s3 = new S3Client({
       region: 'us-east-2',
       credentials: {
@@ -15,8 +22,8 @@ class S3 {
       requestHandler: new NodeHttpHandler({
         connectionTimeout: 3000,
         socketTimeout: 3000,
-        httpAgent: new Agent({ rejectUnauthorized: false }), 
-        httpsAgent: new Agent({ rejectUnauthorized: false }), 
+        httpAgent: new Agent({ rejectUnauthorized: false }),
+        httpsAgent: new Agent({ rejectUnauthorized: false }),
       }),
     });
   }
@@ -24,13 +31,12 @@ class S3 {
   async uploadFile(key, fileBuffer, contentType) {
     try {
       const params = {
-        Bucket: process.env.S3_BUCKET_NAME, 
+        Bucket: this.bucketName, // Usamos la variable bucketName validada.
         Key: key,
         Body: fileBuffer,
         ContentType: contentType,
       };
 
-      
       const command = new PutObjectCommand(params);
       const data = await this.s3.send(command);
 
@@ -49,7 +55,7 @@ class S3 {
       }
 
       const params = {
-        Bucket: process.env.S3_BUCKET_NAME,
+        Bucket: this.bucketName,
         Key: key,
       };
 
