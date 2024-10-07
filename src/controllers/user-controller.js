@@ -10,16 +10,20 @@ const usersService = new UsersService();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.post("/register", async (request, response) => {
+router.post("/register", async (req, res) => {
   try {
-      console.log("Datos recibidos:", request.body);
-      const { nombre, apellido, username, password, mail, empresa } = request.body;
-      const nuevoUser = await usersService.crearUsuario(nombre, apellido, username, password, mail, empresa);
-      console.log("Usuario creado:", nuevoUser);
-      response.status(201).json({ message: "Usuario creado correctamente" });
+    const { nombre, apellido, username, password, mail, empresa } = req.body;
+
+    const nuevoUsuario = await usersService.crearUsuario(nombre, apellido, username, password, mail, empresa);
+
+    res.status(201).json({ message: "Usuario creado correctamente", usuario: nuevoUsuario });
   } catch (error) {
-      console.error("Error al crear usuario:", error.message);
-      response.status(500).json({ message: "Error interno del servidor" });
+    if (error.message === 'El nombre de usuario ya está en uso') {
+      return res.status(409).json({ message: error.message });
+    }
+    
+    console.error("Error al crear usuario:", error.message);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
@@ -50,22 +54,37 @@ router.post("/login", async (request, response) => {
 });
 
 // Rutas protegidas con verifyToken
-router.get('/profile', verifyToken, async (request, response) => {
-    try {
-      const userId = request.user.id; // Obtenemos el id del usuario autenticado
-      const userProfile = await usersService.getUserProfile(userId);
-      response.json({
-        nombre: userProfile.nombre,
-        correo: userProfile.mail,
-        empresa: userProfile.empresa,
-        plan: userProfile.plan,
-        telefono: userProfile.telefono,
-      });
-    } catch (error) {
-      console.error("Error al obtener el perfil", error);
-      return response.status(500).json({ message: "Error interno del servidor" });
+router.get('/profile', verifyToken, async (req, res) => {
+  try {
+    const username = req.user.id; // Aquí extraemos el ID del usuario desde el token
+    console.log('Username from token:', username);
+
+    if (!username) {
+      return res.status(400).json({ message: "ID de usuario no válido." });
     }
+
+    // Llama al servicio para obtener el perfil del usuario basado en el ID
+    const userProfile = await usersService.getUserProfile(username);
+
+    if (!userProfile) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    res.json({
+      nombre: userProfile.nombre,
+      correo: userProfile.mail,
+      empresa: userProfile.empresa,
+      plan: userProfile.plan_nombre,
+      telefono: userProfile.telefono,
+    });
+  } catch (error) {
+    console.error("Error al obtener el perfil", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
 });
+
+
+
 
 router.patch('/updateProfile', verifyToken, async (request, response) => {
   try {

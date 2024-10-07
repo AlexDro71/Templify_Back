@@ -20,9 +20,9 @@ export default class UsersService {
         return returnArray;
     }
 
-    getUserProfile = async (userId) => {
+    getUserProfile = async (username) => {
         const repo = new UsersRepository();
-        const returnArray = await repo.getUserProfile(userId);
+        const returnArray = await repo.getUserProfile(username);
         return returnArray;
     };
 
