@@ -2,6 +2,7 @@ import s3 from '../../s3.js';
 import express from 'express';
 import UsersService from '../services/user-services.js';
 import multer from 'multer';
+import verifyToken from '../middlewares/auth-middleware.js'; // Importa el middleware de autenticación
 
 const router = express.Router();
 const usersService = new UsersService();
@@ -28,7 +29,7 @@ router.post("/login", async (request, response) => {
     const user = await usersService.autenticarUsuario(username, password);
     if (user) {
       const token = await usersService.recibirToken(username, password);
-      console.log("token in controller: " + token.token)
+      console.log("token in controller: " + token.token);
       response.status(200).json({
         success: true,
         message: 'Inicio de sesión exitoso',
@@ -36,7 +37,7 @@ router.post("/login", async (request, response) => {
         user: {
           id: user.id,
           username: user.username
-        } 
+        }
       });
       console.log("Sesión iniciada correctamente");
     } else {
@@ -48,13 +49,14 @@ router.post("/login", async (request, response) => {
   }
 });
 
-router.get('/profile', async (request, response) => {
+// Rutas protegidas con verifyToken
+router.get('/profile', verifyToken, async (request, response) => {
     try {
-      const userId = request.user.id; 
+      const userId = request.user.id; // Obtenemos el id del usuario autenticado
       const userProfile = await usersService.getUserProfile(userId);
-      res.json({
+      response.json({
         nombre: userProfile.nombre,
-        correo: userProfile.correo,
+        correo: userProfile.mail,
         empresa: userProfile.empresa,
         plan: userProfile.plan,
         telefono: userProfile.telefono,
@@ -65,19 +67,26 @@ router.get('/profile', async (request, response) => {
     }
 });
 
-router.patch('/updateProfile', async (request, response) => {
-  const { field, value, password, userId } = request.body;
-  const user = await usersService.getUserProfile(userId);
-  
-  user[field] = value;
-  await user.save();
+router.patch('/updateProfile', verifyToken, async (request, response) => {
+  try {
+    const { field, value, password } = request.body;
+    const userId = request.user.id; // Obtenemos el id del usuario autenticado
+    const user = await usersService.getUserProfile(userId);
 
-  res.json({ message: `${field} actualizado correctamente` });
+    user[field] = value;
+    await user.save();
+
+    response.json({ message: `${field} actualizado correctamente` });
+  } catch (error) {
+    console.error("Error al actualizar el perfil", error);
+    return response.status(500).json({ message: "Error interno del servidor" });
+  }
 });
 
-router.post('/sendSMS', async (request, response) => {
+router.post('/sendSMS', verifyToken, async (request, response) => {
     try {
-      const { phoneNumber, userId } = request.body;
+      const { phoneNumber } = request.body;
+      const userId = request.user.id; // Obtenemos el id del usuario autenticado
       await usersService.sendSMSVerification(userId, phoneNumber);
       response.status(200).json({ message: "SMS enviado para verificación" });
     } catch (error) {
@@ -86,9 +95,10 @@ router.post('/sendSMS', async (request, response) => {
     }
 });
 
-router.patch("/seleccionarPdP", async (request, response) => {
+router.patch("/seleccionarPdP", verifyToken, async (request, response) => {
     try {
-      const { nombrePdP, precio, plazo, userId } = request.body;
+      const { nombrePdP, precio, plazo } = request.body;
+      const userId = request.user.id; // Obtenemos el id del usuario autenticado
       await usersService.seleccionarPdP(userId, nombrePdP, precio, plazo);
       response.status(200).json({ message: "Plan de Pago aplicado al usuario" });
     } catch (error) {
@@ -100,7 +110,7 @@ router.patch("/seleccionarPdP", async (request, response) => {
     }
 });
 
-router.post("/crearPlantilla", async (request, response) => {
+router.post("/crearPlantilla", verifyToken, async (request, response) => {
     try {
         // Lógica para crear plantilla
     } catch (error) {
@@ -109,7 +119,7 @@ router.post("/crearPlantilla", async (request, response) => {
     }
 });
 
-router.post("/cargarArchivos", upload.single('file'), async (request, response) => {
+router.post("/cargarArchivos", verifyToken, upload.single('file'), async (request, response) => {
   const { key, contentType } = request.body;
   const file = request.file;
 
@@ -126,9 +136,8 @@ router.post("/cargarArchivos", upload.single('file'), async (request, response) 
   }
 });
 
-
-router.post("/eliminarArchivos", async (request, response) => {
-  const { key } = request.body; 
+router.post("/eliminarArchivos", verifyToken, async (request, response) => {
+  const { key } = request.body;
   console.log("Datos recibidos:", request.body);
 
   try {
