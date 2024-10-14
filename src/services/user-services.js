@@ -8,6 +8,12 @@ export default class UsersService {
         return returnArray;
     }
 
+    recibirUserId = async (username) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.recibirUserId(username);
+        return returnArray;
+    }
+
     autenticarUsuario = async (username, password) => {
         const repo = new UsersRepository();
         const returnArray = await repo.autenticarUsuario(username, password);
@@ -32,9 +38,9 @@ export default class UsersService {
         return returnArray;
     };
 
-    guardarArchivo = async (fileUrl, userId) => {
+    guardarArchivo = async (fileUrl, userId, fileName) => {
         const repo = new UsersRepository();
-        const returnArray = await repo.guardarArchivo(fileUrl, userId);
+        const returnArray = await repo.guardarArchivo(fileUrl, userId, fileName);
         return returnArray;
     };
 
@@ -45,26 +51,24 @@ export default class UsersService {
     };
 
     recibirToken = async (id, username) => {
-        console.log("Datos recibidos para generar token:", { id, username });
-        const token = this.generarToken(id, username);   
-        console.log("Token in service: " + token)
-        return { success: true, token };
+        console.log({"id": id, "username": username})
+    const token = this.generarToken(id, username);   
+    return { success: true, token };
+};
+
+generarToken = (id, username) => {
+    const payload = {
+        id: id,            
+        username: username 
     };
 
-    generarToken = (id, username) => {
-        console.log("id:", id);
-        const payload = {
-            id: id,
-            username: username
-        };
+    const secretKey = 'Mediafire>>>MEGA';
+    const options = {
+        expiresIn: "4 Hours",
+        issuer: 'NoahDK06'
+    };
 
-        const secretKey = 'Mediafire>>>MEGA';
-        const options = {
-            expiresIn: "4 Hours",
-            issuer: 'NoahDK06'
-        };
-
-        const token = jwt.sign(payload, secretKey, options);
-        return token; 
-    }
+    const token = jwt.sign(payload, secretKey, options); 
+    return token;
+}
 }

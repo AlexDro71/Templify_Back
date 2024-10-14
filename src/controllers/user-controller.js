@@ -30,9 +30,10 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (request, response) => {
   try {
     const { username, password } = request.body;
+    const userId = await usersService.recibirUserId(username);
     const user = await usersService.autenticarUsuario(username, password);
     if (user) {
-      const token = await usersService.recibirToken(username, password);
+      const token = await usersService.recibirToken(userId, username);
       console.log("token in controller: " + token.token);
       response.status(200).json({
         success: true,
@@ -56,15 +57,14 @@ router.post("/login", async (request, response) => {
 // Rutas protegidas con verifyToken
 router.get('/profile', verifyToken, async (req, res) => {
   try {
-    const username = req.user.id; // Aquí extraemos el ID del usuario desde el token
-    console.log('Username from token:', username);
+    const userId = req.user.id; // Extraemos el ID del usuario desde el token
 
-    if (!username) {
+    if (!userId) {
       return res.status(400).json({ message: "ID de usuario no válido." });
     }
 
     // Llama al servicio para obtener el perfil del usuario basado en el ID
-    const userProfile = await usersService.getUserProfile(username);
+    const userProfile = await usersService.getUserProfile(userId);
 
     if (!userProfile) {
       return res.status(404).json({ message: "Usuario no encontrado" });
@@ -82,6 +82,8 @@ router.get('/profile', verifyToken, async (req, res) => {
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 });
+
+
 
 
 
@@ -139,17 +141,18 @@ router.post("/crearPlantilla", verifyToken, async (request, response) => {
 });
 
 router.post("/cargarArchivos", verifyToken, upload.single('file'), async (request, response) => {
-  const { key, contentType } = request.body;
+  const { key, contentType } = request.body;  // 'key' es el nombre del archivo enviado desde el frontend
   const file = request.file;
-  const userId = request.user.id
+  const username = request.user.username;
+  const userId = request.user.id;
 
   if (!file) {
       return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
   }
 
   try {
-      const { data, fileUrl } = await s3.uploadFile(key, file.buffer, contentType);
-      const archivo = await usersService.guardarArchivo(fileUrl, userId)
+      const { data, fileUrl } = await s3.uploadFile(username, key, file.buffer, contentType);
+      const archivo = await usersService.guardarArchivo(fileUrl, userId, key); // Pasamos 'key' como fileName
       response.status(200).json({ message: 'Archivo subido exitosamente', data });
   } catch (error) {
       console.error("Error al cargar archivo", error);
@@ -162,6 +165,7 @@ router.post("/obtenerArchivos", verifyToken, async (request, response) => {
 
   try {
     const archivos = await usersService.obtenerArchivos(userId);
+    console.log(archivos.nombrearchivo)
     if (archivos.length === 0) {
       return response.status(404).json({ message: 'No se encontraron archivos para este usuario.' });
     }

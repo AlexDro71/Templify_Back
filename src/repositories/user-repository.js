@@ -25,6 +25,12 @@ export default class UsersRepository {
         
         return response.rows[0];  
     }
+
+    async recibirUserId(username) {
+        const sql = `SELECT id FROM usuario WHERE username = '${username}'`
+        const response = await this.DBClient.query(sql)
+        return response.rows[0].id
+    }
     
 
     async autenticarUsuario(username, password) {
@@ -54,8 +60,8 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
-    async guardarArchivo(fileUrl, userId) {
-     const sql = `INSERT into archivos (idusuario, linkarchivo) VALUES ('${userId}', '${fileUrl}') RETURNING *`
+    async guardarArchivo(fileUrl, userId, fileName) {
+     const sql = `INSERT into archivos (idusuario, linkarchivo, nombrearchivo) VALUES ('${userId}', '${fileUrl}', '${fileName}') RETURNING *`
      const response = await this.DBClient.query(sql);
      return response.rows[0]
     }
@@ -66,16 +72,16 @@ export default class UsersRepository {
         return response.rows
     }
 
-    async getUserProfile(username) {
+    async getUserProfile(userId) {
         const sql = `
           SELECT u.username, u.nombre, u.mail, u.empresa, 
                  u.telefono, u.plandepago, p.nombre as plan_nombre, 
                  p.precio, p.fechainicio, p.fechafin
           FROM usuario u
           LEFT JOIN plandepago p ON u.plandepago = p.id
-          WHERE u.username = '${username}'
+          WHERE u.id = '${userId}'
         `;
-        const response = await this.DBClient.query(sql);  // Pasa el ID como parámetro
+        const response = await this.DBClient.query(sql); 
         return response.rows[0];
       }
 

@@ -13,6 +13,7 @@ class S3 {
 
     this.bucketName = bucketName;
 
+    // Configuramos el cliente S3 para que ignore los certificados autofirmados
     this.s3 = new S3Client({
       region: 'us-east-2',
       credentials: {
@@ -20,22 +21,23 @@ class S3 {
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
       },
       requestHandler: new NodeHttpHandler({
-        connectionTimeout: 3000,
-        socketTimeout: 3000,
-        httpAgent: new Agent({ rejectUnauthorized: false }),
-        httpsAgent: new Agent({ rejectUnauthorized: false }),
+        connectionTimeout: 300000,
+        socketTimeout: 300000,
+        httpsAgent: new Agent({
+          rejectUnauthorized: false,  // Ignorar certificados autofirmados
+        }),
       }),
+      maxAttempts: 5,  // Incrementa el número de intentos
     });
   }
 
+  // Función para subir archivo a S3
   async uploadFile(userId, key, fileBuffer, contentType) {
     try {
-      // Prefijo basado en el userId o username
-      const prefixedKey = `${userId}/${key}`; // Crea una "carpeta" con el nombre del usuario
-
+      const prefixedKey = `${userId}/${key}`; // Carpeta basada en el userId
       const params = {
         Bucket: this.bucketName,
-        Key: prefixedKey, // Usamos el prefijo del usuario en la clave
+        Key: prefixedKey, 
         Body: fileBuffer,
         ContentType: contentType,
       };
@@ -46,22 +48,24 @@ class S3 {
       const fileUrl = `https://${this.bucketName}.s3.${this.s3.config.region}.amazonaws.com/${prefixedKey}`;
 
       console.log('Archivo subido exitosamente:', data);
-      return { data, fileUrl }; // Devolver también la URL pública
+      return { data, fileUrl }; 
     } catch (err) {
       console.error('Error al subir el archivo:', err);
       throw err;
     }
   }
 
-  async eliminarArchivo(key) {
+  // Función para eliminar archivo de S3
+  async eliminarArchivo(userId, key) {
     try {
       if (!key) {
         throw new Error('No se proporcionó un key válido para eliminar el archivo.');
       }
 
+      const prefixedKey = `${userId}/${key}`; // Usar el prefijo del usuario para eliminar el archivo correcto
       const params = {
         Bucket: this.bucketName,
-        Key: key,
+        Key: prefixedKey,
       };
 
       const command = new DeleteObjectCommand(params);

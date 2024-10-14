@@ -5,6 +5,7 @@ import cors from 'cors';
 import pg from 'pg';
 import { dbConfig } from './db.js';
 
+
 const { Pool } = pg;
 const pool = new Pool(dbConfig);
 
