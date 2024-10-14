@@ -28,11 +28,14 @@ class S3 {
     });
   }
 
-  async uploadFile(key, fileBuffer, contentType) {
+  async uploadFile(userId, key, fileBuffer, contentType) {
     try {
+      // Prefijo basado en el userId o username
+      const prefixedKey = `${userId}/${key}`; // Crea una "carpeta" con el nombre del usuario
+
       const params = {
-        Bucket: this.bucketName, // Usamos la variable bucketName validada.
-        Key: key,
+        Bucket: this.bucketName,
+        Key: prefixedKey, // Usamos el prefijo del usuario en la clave
         Body: fileBuffer,
         ContentType: contentType,
       };
@@ -40,8 +43,10 @@ class S3 {
       const command = new PutObjectCommand(params);
       const data = await this.s3.send(command);
 
+      const fileUrl = `https://${this.bucketName}.s3.${this.s3.config.region}.amazonaws.com/${prefixedKey}`;
+
       console.log('Archivo subido exitosamente:', data);
-      return data;
+      return { data, fileUrl }; // Devolver también la URL pública
     } catch (err) {
       console.error('Error al subir el archivo:', err);
       throw err;

@@ -54,6 +54,17 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
+    async guardarArchivo(fileUrl, userId) {
+     const sql = `INSERT into archivos (idusuario, linkarchivo) VALUES ('${userId}', '${fileUrl}') RETURNING *`
+     const response = await this.DBClient.query(sql);
+     return response.rows[0]
+    }
+
+    async obtenerArchivos(userId) {
+        const sql = `SELECT * FROM archivos WHERE idusuario = '${userId}'`
+        const response = await this.DBClient.query(sql)
+        return response.rows
+    }
 
     async getUserProfile(username) {
         const sql = `
@@ -67,6 +78,8 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);  // Pasa el ID como parámetro
         return response.rows[0];
       }
+
+
 
 
       

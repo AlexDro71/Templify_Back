@@ -32,6 +32,18 @@ export default class UsersService {
         return returnArray;
     };
 
+    guardarArchivo = async (fileUrl, userId) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.guardarArchivo(fileUrl, userId);
+        return returnArray;
+    };
+
+    obtenerArchivos = async (userId) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.obtenerArchivos(userId);
+        return returnArray;
+    };
+
     recibirToken = async (id, username) => {
         console.log("Datos recibidos para generar token:", { id, username });
         const token = this.generarToken(id, username);   

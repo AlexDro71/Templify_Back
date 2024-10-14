@@ -141,14 +141,31 @@ router.post("/crearPlantilla", verifyToken, async (request, response) => {
 router.post("/cargarArchivos", verifyToken, upload.single('file'), async (request, response) => {
   const { key, contentType } = request.body;
   const file = request.file;
+  const userId = request.user.id
 
   if (!file) {
       return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
   }
 
   try {
-      const data = await s3.uploadFile(key, file.buffer, contentType);
+      const { data, fileUrl } = await s3.uploadFile(key, file.buffer, contentType);
+      const archivo = await usersService.guardarArchivo(fileUrl, userId)
       response.status(200).json({ message: 'Archivo subido exitosamente', data });
+  } catch (error) {
+      console.error("Error al cargar archivo", error);
+      response.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
+router.post("/obtenerArchivos", verifyToken, async (request, response) => {
+  const userId = request.user.id
+
+  try {
+    const archivos = await usersService.obtenerArchivos(userId);
+    if (archivos.length === 0) {
+      return response.status(404).json({ message: 'No se encontraron archivos para este usuario.' });
+    }
+    response.status(200).json({ archivos });
   } catch (error) {
       console.error("Error al cargar archivo", error);
       response.status(500).json({ message: "Error interno del servidor" });
