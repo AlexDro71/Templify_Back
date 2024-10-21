@@ -61,16 +61,25 @@ export default class UsersRepository {
         return response.rows[0];
     }
     async guardarArchivo(fileUrl, userId, fileName) {
-     const sql = `INSERT into archivos (idusuario, linkarchivo, nombrearchivo) VALUES ('${userId}', '${fileUrl}', '${fileName}') RETURNING *`
-     const response = await this.DBClient.query(sql);
-     return response.rows[0]
-    }
+        const sql = `INSERT INTO archivos (idusuario, linkarchivo, nombrearchivo) VALUES ($1, $2, $3) RETURNING *`;
+        const response = await this.DBClient.query(sql, [userId, fileUrl, fileName]);
+        return response.rows[0];
+      }
+      
+      async obtenerArchivos(userId) {
+        const sql = `SELECT * FROM archivos WHERE idusuario = $1`;
+        const response = await this.DBClient.query(sql, [userId]);
+        return response.rows;
+      }
+      
 
-    async obtenerArchivos(userId) {
-        const sql = `SELECT * FROM archivos WHERE idusuario = '${userId}'`
-        const response = await this.DBClient.query(sql)
-        return response.rows
-    }
+async eliminarArchivoBD(idArchivo) {
+    const sql = `DELETE FROM archivos WHERE id = '${idArchivo}' RETURNING *`;
+    const response = await this.DBClient.query(sql);
+    return response.rows[0];  // Devuelve el archivo eliminado
+  }
+  
+      
 
     async getUserProfile(userId) {
         const sql = `

@@ -12,10 +12,10 @@ class S3 {
     }
 
     this.bucketName = bucketName;
+    this.region = 'us-east-2'; // Definir la región de manera explícita
 
-    // Configuramos el cliente S3 para que ignore los certificados autofirmados
     this.s3 = new S3Client({
-      region: 'us-east-2',
+      region: this.region,  // Configuramos la región de AWS S3
       credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -32,9 +32,9 @@ class S3 {
   }
 
   // Función para subir archivo a S3
-  async uploadFile(userId, key, fileBuffer, contentType) {
+  async uploadFile(username, key, fileBuffer, contentType) {
     try {
-      const prefixedKey = `${userId}/${key}`; // Carpeta basada en el userId
+      const prefixedKey = `${username}/${key}`; // Usamos el username en lugar del userId
       const params = {
         Bucket: this.bucketName,
         Key: prefixedKey, 
@@ -45,7 +45,8 @@ class S3 {
       const command = new PutObjectCommand(params);
       const data = await this.s3.send(command);
 
-      const fileUrl = `https://${this.bucketName}.s3.${this.s3.config.region}.amazonaws.com/${prefixedKey}`;
+      // Formamos correctamente la URL del archivo
+      const fileUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${prefixedKey}`;
 
       console.log('Archivo subido exitosamente:', data);
       return { data, fileUrl }; 
@@ -56,24 +57,25 @@ class S3 {
   }
 
   // Función para eliminar archivo de S3
-  async eliminarArchivo(userId, key) {
+  async eliminarArchivo(username, key) {
     try {
       if (!key) {
         throw new Error('No se proporcionó un key válido para eliminar el archivo.');
       }
 
-      const prefixedKey = `${userId}/${key}`; // Usar el prefijo del usuario para eliminar el archivo correcto
+      console.log("Intentando eliminar el archivo con Key:", key);
+
       const params = {
         Bucket: this.bucketName,
-        Key: prefixedKey,
+        Key: key,  // Usamos el key tal como viene de la URL del archivo
       };
 
       const command = new DeleteObjectCommand(params);
       const response = await this.s3.send(command);
-      console.log('Archivo eliminado correctamente:', response);
+      console.log('Archivo eliminado correctamente de S3:', response);
       return response;
     } catch (err) {
-      console.error('Error al eliminar el archivo:', err);
+      console.error('Error al eliminar el archivo en S3:', err);
       throw err;
     }
   }

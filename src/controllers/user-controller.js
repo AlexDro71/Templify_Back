@@ -143,54 +143,81 @@ router.post("/crearPlantilla", verifyToken, async (request, response) => {
 router.post("/cargarArchivos", verifyToken, upload.single('file'), async (request, response) => {
   const { key, contentType } = request.body;  // 'key' es el nombre del archivo enviado desde el frontend
   const file = request.file;
-  const username = request.user.username;
+  const username = request.user.username;  // Usamos el username del usuario
   const userId = request.user.id;
 
   if (!file) {
-      return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
+    return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
   }
 
   try {
-      const { data, fileUrl } = await s3.uploadFile(username, key, file.buffer, contentType);
-      const archivo = await usersService.guardarArchivo(fileUrl, userId, key); // Pasamos 'key' como fileName
-      response.status(200).json({ message: 'Archivo subido exitosamente', data });
+    // Subir archivo a S3
+    const { data, fileUrl } = await s3.uploadFile(username, key, file.buffer, contentType);  // Usamos `username` en vez de `userId`
+
+    // Guardar en la base de datos
+    const archivo = await usersService.guardarArchivo(fileUrl, userId, key);
+
+    // Retornar también el ID del archivo recién creado
+    response.status(200).json({ 
+      message: 'Archivo subido exitosamente', 
+      data, 
+      fileUrl, 
+      archivoId: archivo.id // Retornamos el ID del archivo
+    });
   } catch (error) {
-      console.error("Error al cargar archivo", error);
-      response.status(500).json({ message: "Error interno del servidor" });
+    console.error("Error al cargar archivo", error);
+    response.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
+
 router.post("/obtenerArchivos", verifyToken, async (request, response) => {
-  const userId = request.user.id
+  const userId = request.user.id;
 
   try {
     const archivos = await usersService.obtenerArchivos(userId);
-    console.log(archivos.nombrearchivo)
     if (archivos.length === 0) {
       return response.status(404).json({ message: 'No se encontraron archivos para este usuario.' });
     }
     response.status(200).json({ archivos });
   } catch (error) {
-      console.error("Error al cargar archivo", error);
-      response.status(500).json({ message: "Error interno del servidor" });
+    console.error("Error al cargar archivo", error);
+    response.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
 router.post("/eliminarArchivos", verifyToken, async (request, response) => {
-  const { key } = request.body;
-  console.log("Datos recibidos:", request.body);
+  const { idArchivo, linkArchivo } = request.body;  // Recibimos tanto el ID como el link del archivo
+  const username = request.user.username;  // Obtenemos el nombre del usuario
+
+  console.log("Datos recibidos para eliminar:", request.body);
 
   try {
-      if (!key) {
-        return response.status(400).json({ message: 'No se proporcionó un key válido para eliminar el archivo.' });
-      }
+    if (!idArchivo || !linkArchivo) {
+      return response.status(400).json({ message: 'No se proporcionó un id o un link válido para eliminar el archivo.' });
+    }
 
-      const data = await s3.eliminarArchivo(key);
-      response.status(200).json({ message: 'Archivo eliminado correctamente', data });
+    // Extraer el key completo desde el linkArchivo
+    const key = linkArchivo.split('.amazonaws.com/')[1];  // Extraemos la ruta completa después del dominio de S3
+    console.log("Intentando eliminar el archivo con Key:", key);
+
+    // 1. Eliminar el archivo del bucket S3 usando el `key`
+    await s3.eliminarArchivo(username, key);  // Usamos el username para eliminar el archivo
+
+    // 2. Eliminar el archivo de la base de datos usando el idArchivo
+    await usersService.eliminarArchivoBD(idArchivo);
+
+    // Responder con éxito si todo fue exitoso
+    response.status(200).json({ message: 'Archivo eliminado correctamente' });
   } catch (error) {
-      console.error("Error al eliminar archivo", error);
-      response.status(500).json({ message: "Error interno del servidor" });
+    console.error("Error al eliminar archivo", error);
+    response.status(500).json({ message: "Error interno del servidor al eliminar archivo" });
   }
 });
+
+
+
+
+
 
 export default router;

@@ -50,6 +50,12 @@ export default class UsersService {
         return returnArray;
     };
 
+    eliminarArchivoBD = async (archivoId) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.eliminarArchivoBD(archivoId);
+        return returnArray;
+    };
+
     recibirToken = async (id, username) => {
         console.log({"id": id, "username": username})
     const token = this.generarToken(id, username);   
