@@ -153,6 +153,41 @@ router.post("/cargarArchivos", verifyToken, upload.single('file'), async (req, r
   const userId = req.user.id;
 
   if (!file) {
+    console.error("Controller: 'cargarArchivos' - No se ha enviado ningún archivo");
+    return res.status(400).json({ message: 'No se ha enviado ningún archivo.' });
+  }
+
+  try {
+    console.log("Controller: 'cargarArchivos' - Procesando carga de archivo");
+    const finalKey = key === 'profile' ? `${username}/profile` : `${username}/${key}`;
+    const { fileUrl } = await s3.uploadFile(username, finalKey, file.buffer, file.mimetype);
+
+    if (key === 'profile') {
+      console.log("Controller: 'cargarArchivos' - Actualizando foto de perfil en la BD");
+      await usersService.actualizarFotoPerfil(userId, fileUrl);
+      return res.status(200).json({ message: 'Foto de perfil subida correctamente', fileUrl });
+    } else {
+      console.log("Controller: 'cargarArchivos' - Guardando archivo en la BD");
+      const archivo = await usersService.guardarArchivo(fileUrl, userId, key);
+      return res.status(200).json({ message: 'Archivo subido exitosamente', fileUrl, archivoId: archivo.id });
+    }
+  } catch (error) {
+    console.error("Controller: 'cargarArchivos' - Error al cargar archivo", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
+
+// Obtener archivos o la foto de perfil
+router.post("/cargarArchivos", verifyToken, upload.single('file'), async (req, res) => {
+  const { key } = req.body;
+  const file = req.file;
+  const username = req.user.username;
+  const userId = req.user.id;
+  console.log("Controller: cargarArchivos - Iniciando");
+
+  if (!file) {
+    console.log("Controller: cargarArchivos - No se ha enviado ningún archivo");
     return res.status(400).json({ message: 'No se ha enviado ningún archivo.' });
   }
 
@@ -161,39 +196,19 @@ router.post("/cargarArchivos", verifyToken, upload.single('file'), async (req, r
     const { fileUrl } = await s3.uploadFile(username, finalKey, file.buffer, file.mimetype);
 
     if (key === 'profile') {
-      // Actualiza la URL de la foto de perfil en la tabla `usuario`
+      console.log("Controller: cargarArchivos - Actualizando foto de perfil en la base de datos");
       await usersService.actualizarFotoPerfil(userId, fileUrl);
+      console.log("Controller: cargarArchivos - Foto de perfil subida correctamente:", fileUrl);
       return res.status(200).json({ message: 'Foto de perfil subida correctamente', fileUrl });
     } else {
-      // Guarda archivo en la tabla `archivos`
+      console.log("Controller: cargarArchivos - Guardando archivo en la base de datos");
       const archivo = await usersService.guardarArchivo(fileUrl, userId, key);
+      console.log("Controller: cargarArchivos - Archivo subido exitosamente:", fileUrl);
       return res.status(200).json({ message: 'Archivo subido exitosamente', fileUrl, archivoId: archivo.id });
     }
   } catch (error) {
-    console.error("Error al cargar archivo", error);
+    console.error("Controller: cargarArchivos - Error al cargar archivo", error);
     return res.status(500).json({ message: "Error interno del servidor" });
-  }
-});
-
-
-// Obtener archivos o la foto de perfil
-router.post("/obtenerArchivos", verifyToken, async (request, response) => {
-  const userId = request.user.id;
-  const { key } = request.body;
-
-  try {
-    if (key === 'profile') {
-      // Obtener el link de la foto de perfil desde la tabla `usuario`
-      const fotoperfil = await usersService.obtenerFotoPerfil(userId);
-      return fotoperfil ? response.status(200).json({ fotoperfil }) : response.status(404).json({ message: 'Sin foto de perfil.' });
-    }
-
-    // Obtener todos los archivos del usuario en la tabla `archivos`
-    const archivos = await usersService.obtenerArchivos(userId);
-    response.status(200).json({ archivos });
-  } catch (error) {
-    console.error("Error al obtener archivo", error);
-    response.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
@@ -201,20 +216,24 @@ router.post("/obtenerArchivos", verifyToken, async (request, response) => {
 router.post("/eliminarArchivos", verifyToken, async (request, response) => {
   const { idArchivo, linkArchivo } = request.body;
   const username = request.user.username;
+  console.log("Controller: eliminarArchivos - Iniciando");
 
   try {
     const key = linkArchivo.split('.amazonaws.com/')[1];
-    await s3.eliminarArchivo(username, key);
+    console.log("Controller: eliminarArchivos - Eliminando archivo en S3 con key:", key);
+    await s3.eliminarArchivo(key);
 
     if (idArchivo) {
-      // Eliminar un archivo normal en la tabla `archivos`
+      console.log("Controller: eliminarArchivos - Eliminando archivo en la base de datos");
       await usersService.eliminarArchivoBD(idArchivo);
+      console.log("Controller: eliminarArchivos - Archivo eliminado correctamente");
       response.status(200).json({ message: 'Archivo eliminado correctamente' });
     } else {
+      console.log("Controller: eliminarArchivos - ID de archivo no proporcionado");
       response.status(400).json({ message: 'ID de archivo no proporcionado' });
     }
   } catch (error) {
-    console.error("Error al eliminar archivo", error);
+    console.error("Controller: eliminarArchivos - Error al eliminar archivo", error);
     response.status(500).json({ message: "Error interno del servidor al eliminar archivo" });
   }
 });

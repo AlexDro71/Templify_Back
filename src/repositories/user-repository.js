@@ -60,42 +60,52 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
-        async guardarArchivo(fileUrl, userId, fileName) {
-            const sql = `INSERT INTO archivos (idusuario, linkarchivo, nombrearchivo) VALUES ('${userId}', '${fileUrl}', '${fileName}') RETURNING *`;
+    async guardarArchivo(fileUrl, userId, fileName) {
+        console.log("Repository: 'guardarArchivo' - Ejecutando query para insertar archivo");
+        const sql = `INSERT INTO archivos (idusuario, linkarchivo, nombrearchivo) VALUES ('${userId}', '${fileUrl}', '${fileName}') RETURNING *`;
+        const response = await this.DBClient.query(sql);
+        return response.rows[0];
+    }
+        
+    async obtenerArchivos(userId) {
+        console.log("Repository: obtenerArchivos - Iniciando consulta a la base de datos");
+        const sql = `SELECT * FROM archivos WHERE idusuario = '${userId}'`;
+        const response = await this.DBClient.query(sql);
+        console.log("Repository: obtenerArchivos - Resultado de la consulta:", response.rows);
+        return response.rows;
+      }
+        
+
+        async eliminarArchivoBD(idArchivo) {
+            console.log("Repository: 'eliminarArchivoBD' - Ejecutando query para eliminar archivo");
+            const sql = `DELETE FROM archivos WHERE id = '${idArchivo}' RETURNING *`;
             const response = await this.DBClient.query(sql);
             return response.rows[0];
         }
-        
-        async obtenerArchivos(userId) {
-            const sql = `SELECT * FROM archivos WHERE idusuario = '${userId}'`;
+
+        async actualizarFotoPerfil(userId, fileUrl) {
+            console.log("Repository: actualizarFotoPerfil - Iniciando consulta a la base de datos");
+            const sql = `UPDATE usuario SET fotoperfil = '${fileUrl}' WHERE id = '${userId}' RETURNING *`;
             const response = await this.DBClient.query(sql);
-            return response.rows;
-        }
-        
+            console.log("Repository: actualizarFotoPerfil - Resultado de la consulta:", response.rows[0]);
+            return response.rows[0];
+          }
 
-    async eliminarArchivoBD(idArchivo) {
-        const sql = `DELETE FROM archivos WHERE id = '${idArchivo}' RETURNING *`;
+    async obtenerFotoPerfil(userId) {
+        console.log("Repository: obtenerFotoPerfil - Iniciando consulta a la base de datos");
+        const sql = `SELECT fotoperfil FROM usuario WHERE id = '${userId}'`;
         const response = await this.DBClient.query(sql);
-        return response.rows[0];  
-    }
-
-    async actualizarFotoPerfil(userId, fileUrl){
-        const sql = `UPDATE usuario SET fotoperfil = '${fileUrl}' WHERE id = '${userId}' RETURNING *`
-        const response = await this.DBClient.query(sql)
+        console.log("Repository: obtenerFotoPerfil - Resultado de la consulta:", response.rows[0]);
         return response.rows[0];
-    }
+      }
 
-    async obtenerFotoPerfil(userId){
-        const sql = `SELECT foroperfil FROM usuario WHERE id = '${userId}'`
-        const response = await this.DBClient.query(sql)
-        return response.rows[0];
-    }
-
-    async eliminarFotoPerfilBD(userId) {
+      async eliminarFotoPerfilBD(userId) {
+        console.log("Repository: eliminarFotoPerfilBD - Iniciando consulta a la base de datos");
         const sql = `UPDATE usuario SET fotoperfil = NULL WHERE id = '${userId}' RETURNING *`;
         const response = await this.DBClient.query(sql);
+        console.log("Repository: eliminarFotoPerfilBD - Resultado de la consulta:", response.rows[0]);
         return response.rows[0];
-    }
+      }
   
       
 

@@ -34,9 +34,9 @@ class S3 {
   // Subir archivo a S3
   async uploadFile(username, key, fileBuffer, contentType) {
     try {
-      // Verifica si el key ya contiene el nombre del usuario
-      const prefixedKey = key === 'profile' ? `${username}/profile` : key.startsWith(username) ? key : `${username}/${key}`;
+      console.log("S3 Service: 'uploadFile' - Subiendo archivo a S3");
 
+      const prefixedKey = key === 'profile' ? `${username}/profile` : key.startsWith(username) ? key : `${username}/${key}`;
       const params = {
         Bucket: this.bucketName,
         Key: prefixedKey,
@@ -46,13 +46,12 @@ class S3 {
 
       const command = new PutObjectCommand(params);
       const data = await this.s3.send(command);
-
       const fileUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${prefixedKey}`;
 
-      console.log('Archivo subido exitosamente:', data);
+      console.log("S3 Service: 'uploadFile' - Archivo subido exitosamente:", { fileUrl });
       return { data, fileUrl };
     } catch (err) {
-      console.error('Error al subir el archivo:', err);
+      console.error("S3 Service: 'uploadFile' - Error al subir el archivo:", err);
       throw err;
     }
   }
@@ -60,6 +59,8 @@ class S3 {
   // Eliminar archivo de S3
   async eliminarArchivo(key) {
     try {
+      console.log("S3 Service: 'eliminarArchivo' - Eliminando archivo en S3 con key:", key);
+
       if (!key) {
         throw new Error('No se proporcionó un key válido para eliminar el archivo.');
       }
@@ -71,10 +72,11 @@ class S3 {
 
       const command = new DeleteObjectCommand(params);
       const response = await this.s3.send(command);
-      console.log('Archivo eliminado correctamente de S3:', response);
+
+      console.log("S3 Service: 'eliminarArchivo' - Archivo eliminado correctamente de S3:", response);
       return response;
     } catch (err) {
-      console.error('Error al eliminar el archivo en S3:', err);
+      console.error("S3 Service: 'eliminarArchivo' - Error al eliminar el archivo en S3:", err);
       throw err;
     }
   }

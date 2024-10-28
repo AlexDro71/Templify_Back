@@ -39,40 +39,50 @@ export default class UsersService {
     };
 
     guardarArchivo = async (fileUrl, userId, fileName) => {
+        console.log("Service: 'guardarArchivo' - Guardando archivo en la base de datos");
         const repo = new UsersRepository();
         const returnArray = await repo.guardarArchivo(fileUrl, userId, fileName);
         return returnArray;
     };
 
     obtenerArchivos = async (userId) => {
+        console.log("Service: obtenerArchivos - Iniciando");
         const repo = new UsersRepository();
         const returnArray = await repo.obtenerArchivos(userId);
+        console.log("Service: obtenerArchivos - Archivos obtenidos:", returnArray);
         return returnArray;
-    };
+      };
 
     eliminarArchivoBD = async (archivoId) => {
+        console.log("Service: 'eliminarArchivoBD' - Eliminando archivo de la base de datos");
         const repo = new UsersRepository();
         const returnArray = await repo.eliminarArchivoBD(archivoId);
         return returnArray;
     };
 
     actualizarFotoPerfil = async (userId, fileUrl) => {
+        console.log("Service: actualizarFotoPerfil - Iniciando");
         const repo = new UsersRepository();
         const returnArray = await repo.actualizarFotoPerfil(userId, fileUrl);
+        console.log("Service: actualizarFotoPerfil - Foto de perfil actualizada en la base de datos:", returnArray);
         return returnArray;
-    };
+      };
 
     obtenerFotoPerfil = async (userId) => {
+        console.log("Service: obtenerFotoPerfil - Iniciando");
         const repo = new UsersRepository();
         const returnArray = await repo.obtenerFotoPerfil(userId);
+        console.log("Service: obtenerFotoPerfil - Foto de perfil obtenida:", returnArray);
         return returnArray;
-    };
+      };
 
-    eliminarFotoPerfilBD = async (userId) => {
+      eliminarFotoPerfilBD = async (userId) => {
+        console.log("Service: eliminarFotoPerfilBD - Iniciando");
         const repo = new UsersRepository();
         const returnArray = await repo.eliminarFotoPerfilBD(userId);
+        console.log("Service: eliminarFotoPerfilBD - Foto de perfil eliminada de la base de datos:", returnArray);
         return returnArray;
-    };
+      };
 
     recibirToken = async (id, username) => {
         console.log({"id": id, "username": username})
