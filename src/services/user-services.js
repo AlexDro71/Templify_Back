@@ -56,6 +56,24 @@ export default class UsersService {
         return returnArray;
     };
 
+    actualizarFotoPerfil = async (userId, fileUrl) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.actualizarFotoPerfil(userId, fileUrl);
+        return returnArray;
+    };
+
+    obtenerFotoPerfil = async (userId) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.obtenerFotoPerfil(userId);
+        return returnArray;
+    };
+
+    eliminarFotoPerfilBD = async (userId) => {
+        const repo = new UsersRepository();
+        const returnArray = await repo.eliminarFotoPerfilBD(userId);
+        return returnArray;
+    };
+
     recibirToken = async (id, username) => {
         console.log({"id": id, "username": username})
     const token = this.generarToken(id, username);   

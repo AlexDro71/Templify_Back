@@ -71,7 +71,9 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
 
     res.json({
+      username: userProfile.username,  // Agregamos el username aquí
       nombre: userProfile.nombre,
+      apellido: userProfile.apellido,
       correo: userProfile.mail,
       empresa: userProfile.empresa,
       plan: userProfile.plan_nombre,
@@ -82,6 +84,7 @@ router.get('/profile', verifyToken, async (req, res) => {
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 });
+
 
 
 
@@ -140,84 +143,78 @@ router.post("/crearPlantilla", verifyToken, async (request, response) => {
     }
 });
 
+// Subir archivo, incluyendo la foto de perfil
+// Subir archivo, incluyendo la foto de perfil
 router.post("/cargarArchivos", verifyToken, upload.single('file'), async (request, response) => {
-  const { key, contentType } = request.body;  // 'key' es el nombre del archivo enviado desde el frontend
+  const { key } = request.body;  
   const file = request.file;
-  const username = request.user.username;  // Usamos el username del usuario
+  const username = request.user.username;
   const userId = request.user.id;
 
-  if (!file) {
-    return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
-  }
+  if (!file) return response.status(400).json({ message: 'No se ha enviado ningún archivo' });
 
   try {
-    // Subir archivo a S3
-    const { data, fileUrl } = await s3.uploadFile(username, key, file.buffer, contentType);  // Usamos `username` en vez de `userId`
+    const finalKey = key === 'profile' ? `${username}/profile.jpg` : `${username}/${key}`;
+    const { fileUrl } = await s3.uploadFile(username, finalKey, file.buffer, file.mimetype);
 
-    // Guardar en la base de datos
-    const archivo = await usersService.guardarArchivo(fileUrl, userId, key);
-
-    // Retornar también el ID del archivo recién creado
-    response.status(200).json({ 
-      message: 'Archivo subido exitosamente', 
-      data, 
-      fileUrl, 
-      archivoId: archivo.id // Retornamos el ID del archivo
-    });
+    if (key === 'profile') {
+      // Guardar el link de la foto de perfil en la tabla `usuario`
+      await usersService.actualizarFotoPerfil(userId, fileUrl);
+      return response.status(200).json({ message: 'Foto de perfil subida correctamente', fileUrl });
+    } else {
+      // Guardar el archivo normal en la tabla `archivos`
+      const archivo = await usersService.guardarArchivo(fileUrl, userId, key);
+      return response.status(200).json({ message: 'Archivo subido exitosamente', fileUrl, archivoId: archivo.id });
+    }
   } catch (error) {
     console.error("Error al cargar archivo", error);
-    response.status(500).json({ message: "Error interno del servidor" });
+    return response.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
-
+// Obtener archivos o la foto de perfil
 router.post("/obtenerArchivos", verifyToken, async (request, response) => {
   const userId = request.user.id;
+  const { key } = request.body;
 
   try {
-    const archivos = await usersService.obtenerArchivos(userId);
-    if (archivos.length === 0) {
-      return response.status(404).json({ message: 'No se encontraron archivos para este usuario.' });
+    if (key === 'profile') {
+      // Obtener el link de la foto de perfil desde la tabla `usuario`
+      const fotoperfil = await usersService.obtenerFotoPerfil(userId);
+      return fotoperfil ? response.status(200).json({ fotoperfil }) : response.status(404).json({ message: 'Sin foto de perfil.' });
     }
+
+    // Obtener todos los archivos del usuario en la tabla `archivos`
+    const archivos = await usersService.obtenerArchivos(userId);
     response.status(200).json({ archivos });
   } catch (error) {
-    console.error("Error al cargar archivo", error);
+    console.error("Error al obtener archivo", error);
     response.status(500).json({ message: "Error interno del servidor" });
   }
 });
 
+// Eliminar archivo o foto de perfil
 router.post("/eliminarArchivos", verifyToken, async (request, response) => {
-  const { idArchivo, linkArchivo } = request.body;  // Recibimos tanto el ID como el link del archivo
-  const username = request.user.username;  // Obtenemos el nombre del usuario
-
-  console.log("Datos recibidos para eliminar:", request.body);
+  const { nombreArchivo, linkArchivo } = request.body;
+  const username = request.user.username;
 
   try {
-    if (!idArchivo || !linkArchivo) {
-      return response.status(400).json({ message: 'No se proporcionó un id o un link válido para eliminar el archivo.' });
+    const key = linkArchivo.split('.amazonaws.com/')[1];
+    await s3.eliminarArchivo(username, key);
+
+    if (nombreArchivo === 'profile') {
+      // Eliminar la referencia de la foto de perfil en la tabla `usuario`
+      await usersService.eliminarFotoPerfilBD(request.user.id);
+      response.status(200).json({ message: 'Foto de perfil eliminada' });
+    } else {
+      // Eliminar un archivo normal en la tabla `archivos`
+      await usersService.eliminarArchivoBD(nombreArchivo);
+      response.status(200).json({ message: 'Archivo eliminado correctamente' });
     }
-
-    // Extraer el key completo desde el linkArchivo
-    const key = linkArchivo.split('.amazonaws.com/')[1];  // Extraemos la ruta completa después del dominio de S3
-    console.log("Intentando eliminar el archivo con Key:", key);
-
-    // 1. Eliminar el archivo del bucket S3 usando el `key`
-    await s3.eliminarArchivo(username, key);  // Usamos el username para eliminar el archivo
-
-    // 2. Eliminar el archivo de la base de datos usando el idArchivo
-    await usersService.eliminarArchivoBD(idArchivo);
-
-    // Responder con éxito si todo fue exitoso
-    response.status(200).json({ message: 'Archivo eliminado correctamente' });
   } catch (error) {
     console.error("Error al eliminar archivo", error);
     response.status(500).json({ message: "Error interno del servidor al eliminar archivo" });
   }
 });
-
-
-
-
-
 
 export default router;
