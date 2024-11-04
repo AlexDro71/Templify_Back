@@ -56,14 +56,36 @@ class S3 {
     }
   }
 
-  // Eliminar archivo de S3
   async eliminarArchivo(key) {
     try {
       console.log("S3 Service: 'eliminarArchivo' - Eliminando archivo en S3 con key:", key);
-
+  
       if (!key) {
         throw new Error('No se proporcionó un key válido para eliminar el archivo.');
       }
+  
+      const params = {
+        Bucket: this.bucketName,
+        Key: key,
+      };
+  
+      const command = new DeleteObjectCommand(params);
+      const response = await this.s3.send(command);
+  
+      console.log("S3 Service: 'eliminarArchivo' - Archivo eliminado correctamente de S3:", response);
+      return response;
+    } catch (err) {
+      console.error("S3 Service: 'eliminarArchivo' - Error al eliminar el archivo en S3:", err);
+      throw err;
+    }
+  }
+
+  async eliminarFDP(username) {
+    try {
+      console.log("S3 Service: 'eliminarArchivoPorUsuario' - Eliminando archivo en S3");
+
+      // Generar el key a partir del username
+      const key = `${username}/profile`;
 
       const params = {
         Bucket: this.bucketName,
@@ -73,10 +95,10 @@ class S3 {
       const command = new DeleteObjectCommand(params);
       const response = await this.s3.send(command);
 
-      console.log("S3 Service: 'eliminarArchivo' - Archivo eliminado correctamente de S3:", response);
+      console.log("S3 Service: 'eliminarArchivoPorUsuario' - Archivo eliminado correctamente de S3:", response);
       return response;
     } catch (err) {
-      console.error("S3 Service: 'eliminarArchivo' - Error al eliminar el archivo en S3:", err);
+      console.error("S3 Service: 'eliminarArchivoPorUsuario' - Error al eliminar el archivo en S3:", err);
       throw err;
     }
   }

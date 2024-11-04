@@ -216,29 +216,49 @@ router.get("/obtenerFotoPerfil", verifyToken, async (req, res) => {
 });
 
 // Eliminar archivo o foto de perfil
-router.post("/eliminarArchivos", verifyToken, async (request, response) => {
-  const { idArchivo, linkArchivo } = request.body;
-  const username = request.user.username;
-  console.log("Controller: eliminarArchivos - Iniciando");
+router.delete("/eliminarArchivo", verifyToken, async (req, res) => {
+  const { idArchivo, linkArchivo } = req.body;
 
   try {
-    const key = linkArchivo.split('.amazonaws.com/')[1];
-    console.log("Controller: eliminarArchivos - Eliminando archivo en S3 con key:", key);
-    await s3.eliminarArchivo(key);
+    console.log("Controller: eliminarArchivo - Iniciando proceso de eliminación de archivo");
 
-    if (idArchivo) {
-      console.log("Controller: eliminarArchivos - Eliminando archivo en la base de datos");
-      await usersService.eliminarArchivoBD(idArchivo);
-      console.log("Controller: eliminarArchivos - Archivo eliminado correctamente");
-      response.status(200).json({ message: 'Archivo eliminado correctamente' });
-    } else {
-      console.log("Controller: eliminarArchivos - ID de archivo no proporcionado");
-      response.status(400).json({ message: 'ID de archivo no proporcionado' });
+    // Verificar que `linkArchivo` esté definido y extraer el `key`
+    if (!linkArchivo) {
+      return res.status(400).json({ message: 'linkArchivo no proporcionado' });
     }
+    const key = linkArchivo;
+
+    await s3.eliminarArchivo(key);
+    await usersService.eliminarArchivoBD(idArchivo);
+
+    console.log("Controller: eliminarArchivo - Archivo eliminado correctamente");
+    res.status(200).json({ message: 'Archivo eliminado correctamente' });
   } catch (error) {
-    console.error("Controller: eliminarArchivos - Error al eliminar archivo", error);
-    response.status(500).json({ message: "Error interno del servidor al eliminar archivo" });
+    console.error("Controller: eliminarArchivo - Error al eliminar archivo", error);
+    res.status(500).json({ message: "Error interno al eliminar archivo" });
   }
 });
+
+router.post("/eliminarFotoPerfil", verifyToken, async (req, res) => {
+  const userId = req.user.id;
+  const username = req.user.username;  // Extraer el nombre de usuario del token
+
+  try {
+    console.log("Controller: eliminarFotoPerfil - Iniciando proceso de eliminación de foto de perfil en S3");
+
+    // Llamar a la función en s3.js para eliminar el archivo usando el username
+    await s3.eliminarFDP(username);
+
+    // Eliminar el enlace de la foto de perfil en la base de datos
+    await usersService.eliminarFotoPerfilBD(userId);
+
+    console.log("Controller: eliminarFotoPerfil - Foto de perfil eliminada correctamente de la BD y S3");
+    res.status(200).json({ message: 'Foto de perfil eliminada correctamente' });
+  } catch (error) {
+    console.error("Controller: eliminarFotoPerfil - Error al eliminar foto de perfil", error);
+    res.status(500).json({ message: "Error interno al eliminar la foto de perfil" });
+  }
+});
+
 
 export default router;
