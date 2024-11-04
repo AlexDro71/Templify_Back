@@ -75,6 +75,14 @@ export default class UsersService {
         console.log("Service: obtenerFotoPerfil - Foto de perfil obtenida:", returnArray);
         return returnArray;
       };
+      
+      obtenerFotoPerfil = async (userId) => {
+        console.log("Service: obtenerFotoPerfil - Iniciando proceso en el servicio");
+        const repo = new UsersRepository();
+        const fotoPerfil = await repo.obtenerFotoPerfil(userId); // Llamada al repositorio
+        console.log("Service: obtenerFotoPerfil - Foto de perfil obtenida del repositorio:", fotoPerfil);
+        return fotoPerfil;
+      };
 
       eliminarFotoPerfilBD = async (userId) => {
         console.log("Service: eliminarFotoPerfilBD - Iniciando");

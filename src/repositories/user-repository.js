@@ -74,6 +74,14 @@ export default class UsersRepository {
         console.log("Repository: obtenerArchivos - Resultado de la consulta:", response.rows);
         return response.rows;
       }
+
+      async obtenerFotoPerfil(userId) {
+        console.log("Repository: obtenerFotoPerfil - Ejecutando consulta SQL para obtener la foto de perfil");
+        const sql = `SELECT fotoperfil FROM usuario WHERE id = $1`;
+        const response = await this.DBClient.query(sql, [userId]);
+        console.log("Repository: obtenerFotoPerfil - Resultado de la consulta:", response.rows[0]);
+        return response.rows[0];
+      }
         
 
         async eliminarArchivoBD(idArchivo) {

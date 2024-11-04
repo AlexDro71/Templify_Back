@@ -143,9 +143,7 @@ router.post("/crearPlantilla", verifyToken, async (request, response) => {
     }
 });
 
-// Subir archivo, incluyendo la foto de perfil
-// Subir archivo, incluyendo la foto de perfil
-// Cargar archivo o foto de perfil
+
 router.post("/cargarArchivos", verifyToken, upload.single('file'), async (req, res) => {
   const { key } = req.body;
   const file = req.file;
@@ -178,37 +176,42 @@ router.post("/cargarArchivos", verifyToken, upload.single('file'), async (req, r
 });
 
 
-// Obtener archivos o la foto de perfil
-router.post("/cargarArchivos", verifyToken, upload.single('file'), async (req, res) => {
-  const { key } = req.body;
-  const file = req.file;
-  const username = req.user.username;
-  const userId = req.user.id;
-  console.log("Controller: cargarArchivos - Iniciando");
 
-  if (!file) {
-    console.log("Controller: cargarArchivos - No se ha enviado ningún archivo");
-    return res.status(400).json({ message: 'No se ha enviado ningún archivo.' });
+router.get("/obtenerArchivos", verifyToken, async (req, res) => {
+  const userId = req.user.id; 
+  
+  try {
+    console.log("Controller: obtenerArchivos - Iniciando proceso de obtención de archivos");
+
+  
+    const archivos = await usersService.obtenerArchivos(userId);
+
+    console.log("Controller: obtenerArchivos - Archivos obtenidos exitosamente", archivos);
+
+
+    res.status(200).json({ archivos });
+  } catch (error) {
+    console.error("Controller: obtenerArchivos - Error al obtener archivos", error);
+    res.status(500).json({ message: "Error interno al obtener archivos" });
   }
+});
+
+router.get("/obtenerFotoPerfil", verifyToken, async (req, res) => {
+  const userId = req.user.id; // Obtener el ID del usuario desde el token
 
   try {
-    const finalKey = key === 'profile' ? `${username}/profile` : `${username}/${key}`;
-    const { fileUrl } = await s3.uploadFile(username, finalKey, file.buffer, file.mimetype);
+    console.log("Controller: obtenerFotoPerfil - Iniciando obtención de la foto de perfil");
 
-    if (key === 'profile') {
-      console.log("Controller: cargarArchivos - Actualizando foto de perfil en la base de datos");
-      await usersService.actualizarFotoPerfil(userId, fileUrl);
-      console.log("Controller: cargarArchivos - Foto de perfil subida correctamente:", fileUrl);
-      return res.status(200).json({ message: 'Foto de perfil subida correctamente', fileUrl });
-    } else {
-      console.log("Controller: cargarArchivos - Guardando archivo en la base de datos");
-      const archivo = await usersService.guardarArchivo(fileUrl, userId, key);
-      console.log("Controller: cargarArchivos - Archivo subido exitosamente:", fileUrl);
-      return res.status(200).json({ message: 'Archivo subido exitosamente', fileUrl, archivoId: archivo.id });
-    }
+    // Llamar al servicio para obtener la foto de perfil
+    const fotoPerfil = await usersService.obtenerFotoPerfil(userId);
+
+    console.log("Controller: obtenerFotoPerfil - Foto de perfil obtenida exitosamente", fotoPerfil);
+
+    // Responder con el link de la foto de perfil
+    res.status(200).json({ fotoperfil: fotoPerfil.fotoperfil });
   } catch (error) {
-    console.error("Controller: cargarArchivos - Error al cargar archivo", error);
-    return res.status(500).json({ message: "Error interno del servidor" });
+    console.error("Controller: obtenerFotoPerfil - Error al obtener foto de perfil", error);
+    res.status(500).json({ message: "Error interno al obtener la foto de perfil" });
   }
 });
 
