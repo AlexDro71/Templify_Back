@@ -74,7 +74,7 @@ router.get('/profile', verifyToken, async (req, res) => {
       username: userProfile.username,  // Agregamos el username aquí
       nombre: userProfile.nombre,
       apellido: userProfile.apellido,
-      correo: userProfile.mail,
+      mail: userProfile.mail,
       empresa: userProfile.empresa,
       plan: userProfile.plan_nombre,
       telefono: userProfile.telefono,
@@ -85,38 +85,18 @@ router.get('/profile', verifyToken, async (req, res) => {
   }
 });
 
-
-
-
-
-
-
 router.patch('/updateProfile', verifyToken, async (request, response) => {
   try {
-    const { field, value, password } = request.body;
-    const userId = request.user.id; // Obtenemos el id del usuario autenticado
-    const user = await usersService.getUserProfile(userId);
+    const { field, value } = request.body;
+    const userId = request.user.id;
 
-    user[field] = value;
-    await user.save();
+    const user = await usersService.updateUserProfile(userId, field, value);
 
-    response.json({ message: `${field} actualizado correctamente` });
+    response.json({ message: `${field} actualizado correctamente`, user });
   } catch (error) {
     console.error("Error al actualizar el perfil", error);
     return response.status(500).json({ message: "Error interno del servidor" });
   }
-});
-
-router.post('/sendSMS', verifyToken, async (request, response) => {
-    try {
-      const { phoneNumber } = request.body;
-      const userId = request.user.id; // Obtenemos el id del usuario autenticado
-      await usersService.sendSMSVerification(userId, phoneNumber);
-      response.status(200).json({ message: "SMS enviado para verificación" });
-    } catch (error) {
-      console.error("Error al enviar SMS", error);
-      return response.status(500).json({ message: "Error interno del servidor" });
-    }
 });
 
 router.patch("/seleccionarPdP", verifyToken, async (request, response) => {

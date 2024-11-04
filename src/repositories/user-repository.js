@@ -113,7 +113,8 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         console.log("Repository: eliminarFotoPerfilBD - Resultado de la consulta:", response.rows[0]);
         return response.rows[0];
-      }      
+      }
+      
 
   async getUserProfile(userId) {
     const sql = `
@@ -128,12 +129,6 @@ export default class UsersRepository {
     return response.rows[0];
   }
   
-
-
-
-
-      
-
     async updateUserProfile(userId, field, value) {
         const sql = `UPDATE usuario SET ${field} = '${value}' WHERE id = '${userId}' RETURNING *`;
         const response = await this.DBClient.query(sql);
