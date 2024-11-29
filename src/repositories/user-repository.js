@@ -180,4 +180,17 @@ export default class UsersRepository {
         console.log('Repository: crearTemplate - Template y asociación creados con éxito');
         return templateId;
       }
+
+      async obtenerTemplatePorId(templateId) {
+        console.log('Repository: obtenerTemplatePorId - Iniciando consulta a la base de datos');
+        const sql = `
+          SELECT linktemplate, nombre 
+          FROM plantilla 
+          WHERE id = $1
+        `;
+        const response = await this.DBClient.query(sql, [templateId]);
+        console.log('Repository: obtenerTemplatePorId - Resultado:', response.rows[0]);
+        return response.rows[0];
+      }
+
 }

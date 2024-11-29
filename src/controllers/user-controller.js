@@ -283,16 +283,36 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
   
       // Crear el archivo en AWS S3
       const linkTemplate = `${username}/${nombre.replace(/\s+/g, '_')}.html`;
-      await s3Service.uploadFile(username, linkTemplate, Buffer.from('<!DOCTYPE html><html></html>', 'utf8'), 'text/html');
+      await s3.uploadFile(
+        username,
+        linkTemplate,
+        Buffer.from('<!DOCTYPE html><html><body></body></html>', 'utf8'),
+        'text/html'
+      );
   
       // Guardar en la base de datos
-      const templateId = await usersService.crearTemplate(userId, nombre, linkTemplate);
+      const templateId = await usersService.crearTemplate(userId, nombre, `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${linkTemplate}`);
   
       console.log('Controller: crearTemplate - Template creado con éxito:', templateId);
       res.status(201).json({ templateId });
     } catch (error) {
       console.error('Controller: crearTemplate - Error al crear template:', error);
       res.status(500).json({ message: 'Error interno al crear template' });
+    }
+  });
+  
+
+  router.get('/obtenerContenidoTemplate/:id', verifyToken, async (req, res) => {
+    const templateId = req.params.id;
+  
+    try {
+      console.log('Controller: obtenerContenidoTemplate - Iniciando proceso');
+      const content = await usersService.obtenerContenidoTemplate(templateId);
+      console.log('Controller: obtenerContenidoTemplate - Contenido obtenido correctamente');
+      res.status(200).json({ content });
+    } catch (error) {
+      console.error('Controller: obtenerContenidoTemplate - Error al obtener contenido:', error);
+      res.status(500).json({ message: 'Error al obtener el contenido del template' });
     }
   });
 
