@@ -92,6 +92,30 @@ export default class UsersService {
         return returnArray;
       };
 
+      obtenerTemplates = async (userId) => {
+        console.log('Service: obtenerTemplates - Consultando repositorio');
+        const repo = new UsersRepository();
+        const templates = await repo.obtenerTemplates(userId);
+        console.log('Service: obtenerTemplates - Templates obtenidos:', templates);
+        return templates;
+      };
+
+      obtenerTemplatesPublicos = async () => {
+        console.log('Service: obtenerTemplatesPublicos - Consultando repositorio');
+        const repo = new UsersRepository();
+        const templates = await repo.obtenerTemplatesPublicos();
+        console.log('Service: obtenerTemplatesPublicos - Templates públicos obtenidos:', templates);
+        return templates;
+      };
+    
+      crearTemplate = async (userId, nombre, linkTemplate) => {
+        console.log('Service: crearTemplate - Guardando template en la base de datos');
+        const repo = new UsersRepository();
+        const templateId = await repo.crearTemplate(userId, nombre, linkTemplate);
+        console.log('Service: crearTemplate - Template creado con éxito:', templateId);
+        return templateId;
+      };
+
     recibirToken = async (id, username) => {
         console.log({"id": id, "username": username})
     const token = this.generarToken(id, username);   

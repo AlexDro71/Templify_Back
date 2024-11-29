@@ -240,5 +240,61 @@ router.post("/eliminarFotoPerfil", verifyToken, async (req, res) => {
   }
 });
 
+router.get('/obtenerTemplates', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    console.log('Controller: obtenerTemplates - Iniciando obtención de archivos');
+    const archivos = await usersService.obtenerTemplates(userId);
+    console.log('Controller: obtenerTemplates - Archivos obtenidos exitosamente:', archivos);
+
+    res.status(200).json({ archivos });
+  } catch (error) {
+    console.error('Controller: obtenerTemplates - Error al obtener archivos:', error);
+    res.status(500).json({ message: 'Error interno al obtener archivos' });
+  }
+});
+
+router.get('/obtenerTemplatesPublicos', async (req, res) => {
+  try {
+    console.log('Controller: obtenerTemplatesPublicos - Iniciando consulta de templates públicos');
+    const templatesPublicos = await usersService.obtenerTemplatesPublicos();
+    console.log('Controller: obtenerTemplatesPublicos - Templates públicos obtenidos:', templatesPublicos);
+
+    res.status(200).json({ templates: templatesPublicos });
+  } catch (error) {
+    console.error('Controller: obtenerTemplatesPublicos - Error:', error);
+    res.status(500).json({ message: 'Error al obtener templates públicos' });
+  }
+});
+
+  // Crear un nuevo template personal
+  router.post('/crearTemplate', verifyToken, async (req, res) => {
+    const { nombre } = req.body;
+    const userId = req.user.id;
+    const username = req.user.username;
+  
+    if (!nombre) {
+      return res.status(400).json({ message: 'El nombre del template es obligatorio.' });
+    }
+  
+    try {
+      console.log('Controller: crearTemplate - Iniciando creación del template');
+  
+      // Crear el archivo en AWS S3
+      const linkTemplate = `${username}/${nombre.replace(/\s+/g, '_')}.html`;
+      await s3Service.uploadFile(username, linkTemplate, Buffer.from('<!DOCTYPE html><html></html>', 'utf8'), 'text/html');
+  
+      // Guardar en la base de datos
+      const templateId = await usersService.crearTemplate(userId, nombre, linkTemplate);
+  
+      console.log('Controller: crearTemplate - Template creado con éxito:', templateId);
+      res.status(201).json({ templateId });
+    } catch (error) {
+      console.error('Controller: crearTemplate - Error al crear template:', error);
+      res.status(500).json({ message: 'Error interno al crear template' });
+    }
+  });
+
 
 export default router;

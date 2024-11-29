@@ -134,4 +134,50 @@ export default class UsersRepository {
         const response = await this.DBClient.query(sql);
         return response.rows[0];
     }
+
+    async obtenerTemplates(userId) {
+        console.log('Repository: obtenerTemplates - Ejecutando consulta');
+        const sql = `
+          SELECT plantilla.id, plantilla.nombre, plantilla.linktemplate 
+          FROM plantilla 
+          JOIN planxus ON plantilla.id = planxus.idplantilla 
+          WHERE planxus.idusuario = $1
+        `;
+        const response = await this.DBClient.query(sql, [userId]);
+        console.log('Repository: obtenerTemplates - Resultados:', response.rows);
+        return response.rows;
+      }
+
+      async obtenerTemplatesPublicos() {
+        console.log('Repository: obtenerTemplatesPublicos - Consultando base de datos');
+        const sql = `
+          SELECT id, linktemplate, nombre 
+          FROM plantilla 
+          WHERE linktemplate LIKE '%/Base/%'
+        `;
+        const response = await this.DBClient.query(sql);
+        console.log('Repository: obtenerTemplatesPublicos - Resultados:', response.rows);
+        return response.rows;
+      }s
+    
+      
+      async crearTemplate(userId, nombre, linkTemplate) {
+        console.log('Repository: crearTemplate - Insertando en la base de datos');
+        const plantillaQuery = `
+          INSERT INTO plantilla (linktemplate, nombre) 
+          VALUES ($1, $2) 
+          RETURNING id
+        `;
+        const plantillaResponse = await this.DBClient.query(plantillaQuery, [linkTemplate, nombre]);
+        const templateId = plantillaResponse.rows[0].id;
+    
+        const planxusQuery = `
+          INSERT INTO planxus (idplantilla, idusuario) 
+          VALUES ($1, $2)
+        `;
+        await this.DBClient.query(planxusQuery, [templateId, userId]);
+    
+        console.log('Repository: crearTemplate - Template y asociación creados con éxito');
+        return templateId;
+      }
 }
