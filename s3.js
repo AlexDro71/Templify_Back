@@ -103,6 +103,6 @@ class S3 {
     }
   }
 }
-
+ 
 const s3Instance = new S3();
 export default s3Instance;
