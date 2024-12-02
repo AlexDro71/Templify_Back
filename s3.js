@@ -73,10 +73,15 @@ class S3 {
     try {
       console.log(`S3 Service: 'obtenerArchivo' - Descargando archivo con key: ${key}`);
   
-      const params = { Bucket: this.bucketName, Key: key };
+      const params = {
+        Bucket: this.bucketName,
+        Key: key, // Usamos solo el key relativo
+      };
+  
       const command = new GetObjectCommand(params);
       const response = await this.s3.send(command);
   
+      // Convertir el stream a string
       const streamToString = (stream) =>
         new Promise((resolve, reject) => {
           const chunks = [];
@@ -86,13 +91,14 @@ class S3 {
         });
   
       const content = await streamToString(response.Body);
-      console.log("S3 Service: 'obtenerArchivo' - Archivo descargado exitosamente");
+      console.log('S3 Service: "obtenerArchivo" - Archivo descargado correctamente');
       return content;
-    } catch (err) {
-      console.error("S3 Service: 'obtenerArchivo' - Error al obtener archivo:", err);
-      throw err;
+    } catch (error) {
+      console.error('S3 Service: "obtenerArchivo" - Error al obtener archivo:', error);
+      throw error;
     }
   }
+  
 
   /**
    * Eliminar un archivo de S3

@@ -85,8 +85,11 @@ export default class UsersService {
 
   async crearTemplate(userId, nombre, linkTemplate) {
     console.log('Service: crearTemplate - Guardando template en la base de datos');
-    const result = await this.repo.crearTemplate(userId, nombre, linkTemplate);
-    return result.id; // Retorna el ID del nuevo template
+    
+    // Llamar al repositorio para guardar en las tablas `plantilla` y `planxus`
+    const templateId = await this.repo.crearTemplate(userId, nombre, linkTemplate);
+    
+    return templateId; // Retornar el ID del template creado
   }
 
   async obtenerContenidoTemplate(templateId) {
@@ -100,11 +103,8 @@ export default class UsersService {
   
     console.log('Service: obtenerContenidoTemplate - Obteniendo contenido de S3');
   
-    // Calcular el key relativo
-    const bucketUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/`;
-    const s3Key = template.linktemplate.startsWith(bucketUrl)
-      ? template.linktemplate.replace(bucketUrl, '') // Eliminar la URL base
-      : template.linktemplate; // Si no coincide, usar el valor original
+    // Extraer el key desde el linktemplate
+    const s3Key = this.extraerKeyDesdeUrl(template.linktemplate);
   
     console.log(`Service: obtenerContenidoTemplate - Key generado: ${s3Key}`);
   
@@ -113,6 +113,24 @@ export default class UsersService {
     return content;
   }
   
+  // Nueva función: extraerKeyDesdeUrl
+  extraerKeyDesdeUrl(url) {
+    try {
+      const urlObj = new URL(url); // Analiza la URL
+      let key = urlObj.pathname.substring(1); // Obtén el path después del "/"
+      key = decodeURIComponent(key); // Decodifica caracteres especiales en la URL
+      console.log(`Service: extraerKeyDesdeUrl - Key extraído: ${key}`);
+      return key;
+    } catch (error) {
+      console.error('Service: extraerKeyDesdeUrl - Error al analizar la URL:', error);
+      throw new Error('URL inválida para extraer el key.');
+    }
+  }
+  
+  actualizarTemplates = async (templateId) => {
+    const templates = await this.repo.actualizarTemplates();
+    return templates;
+  };
 
   recibirToken = async (id, username) => {
     console.log({ id, username });

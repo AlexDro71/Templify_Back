@@ -163,6 +163,8 @@ export default class UsersRepository {
       
       async crearTemplate(userId, nombre, linkTemplate) {
         console.log('Repository: crearTemplate - Insertando en la base de datos');
+      
+        // Insertar el template en `plantilla`
         const plantillaQuery = `
           INSERT INTO plantilla (linktemplate, nombre) 
           VALUES ($1, $2) 
@@ -170,15 +172,16 @@ export default class UsersRepository {
         `;
         const plantillaResponse = await this.DBClient.query(plantillaQuery, [linkTemplate, nombre]);
         const templateId = plantillaResponse.rows[0].id;
-    
+      
+        // Asociar el template al usuario en `planxus`
         const planxusQuery = `
           INSERT INTO planxus (idplantilla, idusuario) 
           VALUES ($1, $2)
         `;
         await this.DBClient.query(planxusQuery, [templateId, userId]);
-    
+      
         console.log('Repository: crearTemplate - Template y asociación creados con éxito');
-        return templateId;
+        return templateId; // Retornar el ID del template creado
       }
 
       async obtenerTemplatePorId(templateId) {
@@ -190,6 +193,12 @@ export default class UsersRepository {
         `;
         const response = await this.DBClient.query(sql, [templateId]);
         console.log('Repository: obtenerTemplatePorId - Resultado:', response.rows[0]);
+        return response.rows[0];
+      }
+
+      async actualizarTemplates(templateId){
+        const sql = `UPDATE plantilla SET linktemplate = '${a}' WHERE id = '${templateId}' RETURNING *`
+        const response = await this.DBClient.query(sql);
         return response.rows[0];
       }
 

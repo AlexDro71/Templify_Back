@@ -270,9 +270,9 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
 
   // Crear un nuevo template personal
   router.post('/crearTemplate', verifyToken, async (req, res) => {
-    const { nombre } = req.body;
-    const userId = req.user.id;
-    const username = req.user.username;
+    const { nombre } = req.body; // Nombre del template ingresado por el usuario
+    const userId = req.user.id; // ID del usuario
+    const username = req.user.username; // Nombre del usuario para generar el key
   
     if (!nombre) {
       return res.status(400).json({ message: 'El nombre del template es obligatorio.' });
@@ -281,8 +281,10 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
     try {
       console.log('Controller: crearTemplate - Iniciando creación del template');
   
-      // Crear el archivo en AWS S3
+      // Crear un key para el template en S3
       const linkTemplate = `${username}/${nombre.replace(/\s+/g, '_')}.html`;
+  
+      // Crear un archivo vacío en S3
       await s3.uploadFile(
         username,
         linkTemplate,
@@ -290,10 +292,16 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
         'text/html'
       );
   
-      // Guardar en la base de datos
-      const templateId = await usersService.crearTemplate(userId, nombre, `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${linkTemplate}`);
+      // Guardar el template en la base de datos
+      const templateId = await usersService.crearTemplate(
+        userId,
+        nombre,
+        `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${linkTemplate}`
+      );
   
       console.log('Controller: crearTemplate - Template creado con éxito:', templateId);
+  
+      // Responder con el ID del template creado
       res.status(201).json({ templateId });
     } catch (error) {
       console.error('Controller: crearTemplate - Error al crear template:', error);
@@ -313,6 +321,18 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
     } catch (error) {
       console.error('Controller: obtenerContenidoTemplate - Error al obtener contenido:', error);
       res.status(500).json({ message: 'Error al obtener el contenido del template' });
+    }
+  });
+
+  router.patch('/actualizarTemplate/:id', verifyToken, async (req, res) => {
+    const templateId = req.params.id;
+  
+    try {
+      const actualizar = await usersService.actualizarTemplate(templateId);
+      res.status(200).json({ message: 'Template actualizado' });
+    } catch (error) {
+      console.error('Controller: actualizaroTemplate - Error al actualizar:', error);
+      res.status(500).json({ message: 'Error al actualizar el contenido del template' });
     }
   });
 
