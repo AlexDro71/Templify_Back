@@ -351,5 +351,31 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
     }
   });
 
+  router.patch('/actualizarTemplate', verifyToken, upload.single('file'), async (req, res) => {
+    const { id } = req.query; // Obtener el ID del template desde los parámetros de la query
+    const file = req.file;
+  
+    if (!id || !file) {
+      return res.status(400).json({ message: 'El ID y el archivo son obligatorios.' });
+    }
+  
+    try {
+      // Subir el archivo al S3
+      const userId = req.user.id; // Obtener el ID del usuario autenticado
+      const username = req.user.username; // Obtener el nombre de usuario para usarlo como prefijo
+      const fileKey = `${username}/template-${id}.html`; // Generar el key del archivo en S3
+  
+      const { fileUrl } = await s3.uploadFile(username, fileKey, file.buffer, file.mimetype);
+  
+      // Actualizar el link en la tabla `plantilla`
+      const result = await usersService.actualizarTemplate(id, fileUrl);
+  
+      res.status(200).json({ message: 'Template actualizado correctamente.', link: fileUrl, result });
+    } catch (error) {
+      console.error('Error al actualizar el template:', error);
+      res.status(500).json({ message: 'Error al actualizar el template.' });
+    }
+  });
+
 
 export default router;

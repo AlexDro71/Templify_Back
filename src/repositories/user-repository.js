@@ -188,4 +188,11 @@ export default class UsersRepository {
         console.log('Repository: obtenerTemplatePorId - Resultado:', response.rows[0]);
         return response.rows[0]; // Retorna el objeto con el campo `linktemplate`
       }
+
+      async actualizarTemplate(id, link) {
+        console.log(`Repository: actualizarTemplate - Ejecutando query para ID: ${id}`);
+        const sql = `UPDATE plantilla SET linktemplate = $1 WHERE id = $2 RETURNING *`;
+        const response = await this.DBClient.query(sql, [link, id]);
+        return response.rows[0];
+      }
 }

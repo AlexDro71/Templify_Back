@@ -124,6 +124,12 @@ export default class UsersService {
         return template;
       };
 
+      actualizarTemplate = async (id, link) => {
+        console.log(`Service: actualizarTemplate - Actualizando template ID: ${id} con link: ${link}`);
+        const repo = new UsersRepository();
+        return await repo.actualizarTemplate(id, link);
+      };
+
     recibirToken = async (id, username) => {
         console.log({"id": id, "username": username})
     const token = this.generarToken(id, username);   
