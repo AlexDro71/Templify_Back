@@ -48,6 +48,7 @@ class S3 {
       const data = await this.s3.send(command);
       const fileUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${prefixedKey}`;
 
+
       console.log("S3 Service: 'uploadFile' - Archivo subido exitosamente:", { fileUrl });
       return { data, fileUrl };
     } catch (err) {

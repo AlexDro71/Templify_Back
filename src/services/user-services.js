@@ -116,6 +116,14 @@ export default class UsersService {
         return templateId;
       };
 
+      obtenerTemplatePorId = async (templateId) => {
+        console.log('Service: obtenerTemplatePorId - Consultando repositorio');
+        const repo = new UsersRepository();
+        const template = await repo.obtenerTemplatePorId(templateId);
+        console.log('Service: obtenerTemplatePorId - Template obtenido:', template);
+        return template;
+      };
+
     recibirToken = async (id, username) => {
         console.log({"id": id, "username": username})
     const token = this.generarToken(id, username);   

@@ -240,6 +240,20 @@ router.post("/eliminarFotoPerfil", verifyToken, async (req, res) => {
   }
 });
 
+router.get('/obtenerTemplates', verifyToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const templates = await usersService.obtenerTemplates(userId);
+    res.status(200).json({ templates });
+  } catch (error) {
+    console.error('Error al obtener templates personales:', error);
+    res.status(500).json({ message: 'Error al obtener templates personales.' });
+  }
+});
+
+
+
 router.post("/guardarTemplate", verifyToken, upload.single('file'), async (req, res) => {
   const { key } = req.body;
   const file = req.file;
@@ -321,6 +335,19 @@ router.get('/obtenerTemplatesPublicos', async (req, res) => {
     } catch (error) {
       console.error('Controller: crearTemplate - Error al crear template:', error);
       res.status(500).json({ message: 'Error interno al crear template' });
+    }
+  });
+
+  router.get('/obtenerTemplatePorId', verifyToken, async (req, res) => {
+    const { id } = req.query;
+  
+    try {
+      const template = await usersService.obtenerTemplatePorId(id);
+      console.log('Link retornado:', template.linktemplate); // Verifica el link aquí
+      res.status(200).json({ link: template.linktemplate });
+    } catch (error) {
+      console.error('Error al obtener template por ID:', error);
+      res.status(500).json({ message: 'Error al obtener el template.' });
     }
   });
 
